@@ -1,0 +1,316 @@
+# Neynar
+
+## Docs
+
+- [Add a Verification](https://docs.neynar.com/docs/add-a-verification.md): Walkthrough on how to add an ethereum or solana address as a verification to a user's farcaster profile
+- [Address User Score Contract](https://docs.neynar.com/docs/address-user-score-contract.md): Get user quality score for an address connected to a Farcaster profile.
+- [Create Farcaster Frames Using Neynar & Frog](https://docs.neynar.com/docs/analytics-frame-neynar-frog.md): In this guide, we’ll learn how to make a frame with the neynar SDK and Frog.fm, within a few minutes! For this demo, it will be a simple rock-paper-scissors game but it will give you an idea of how to create multi-page frames, interact with buttons, and get analytics for your frame with no extra effort.
+- [Mini App Hosts Notifications](https://docs.neynar.com/docs/app-host-notifications.md): Token management and inbound webhook handling for apps that host mini apps
+- [Host Farcaster Mini Apps — Overview](https://docs.neynar.com/docs/app-host-overview.md): A guide to hosting Farcaster Mini Apps: understand concepts, implement core features, and integrate with your Farcaster client.
+- [Appendix](https://docs.neynar.com/docs/appendix.md): Understanding the new user registration process
+- [Archive Casts](https://docs.neynar.com/docs/archiving-casts-with-neynar.md): Archiving Farcaster data with Neynar
+- [Auth Address Signature Generation](https://docs.neynar.com/docs/auth-address-signature-generation.md): Generate a Signed Key Request using viem for registering auth addresses in Farcaster with Neynar
+- [Build Interactive Farcaster Frames with Neynar](https://docs.neynar.com/docs/building-frames.md): Learn how to build interactive Farcaster frames 100x faster using Neynar's Frame Studio, no-code templates, and comprehensive Frame APIs. Create dynamic social experiences with validation, hosting, and embedding capabilities.
+- [Cast Action with Analytics](https://docs.neynar.com/docs/cast-action-with-analytics-neynar.md): In this guide, we’ll make a cast action with the neynar SDK and frog.fm, within a few minutes! The cast action will fetch the follower count of the cast's author using its fid and display it.
+- [Cast From Inside a Frame](https://docs.neynar.com/docs/casting-from-a-frame.md): In this guide, we'll look at how to build a frame using which people can create casts and perform other actions on the Farcaster app.
+- [Find User Subscriptions with Neynar Hypersub](https://docs.neynar.com/docs/common-subscriptions-fabric.md): Finding Hypersub subscriptions on Social Token Protocol (STP) using Neynar
+- [Convert a Web App to a Farcaster Mini App](https://docs.neynar.com/docs/convert-web-app-to-mini-app.md): Update any JavaScript web app to be a Farcaster mini app
+- [Bot Replying with Frames](https://docs.neynar.com/docs/create-a-farcaster-bot-to-reply-with-frames-using-neynar.md): In this guide, we’ll take a look at how to create a Farcaster bot that replies to specific keywords with a frame created on the go specifically for the reply!
+- [Cast Stream](https://docs.neynar.com/docs/create-a-stream-of-casts.md): Fetch stream of casts with Farcaster hubs
+- [Create in UI](https://docs.neynar.com/docs/create-farcaster-bot-ui.md): Create a new Farcaster agent directly in Neynar dev portal
+- [Create Farcaster Mini App (v2 frame) in < 60s](https://docs.neynar.com/docs/create-farcaster-frame-in-60s.md): Create a v2 Farcaster mini app in less than 60 seconds
+- [Create Farcaster Mini App](https://docs.neynar.com/docs/create-farcaster-miniapp-in-60s.md): Create a Farcaster mini app in less than 60 seconds
+- [Create Multi Step Cast Action](https://docs.neynar.com/docs/create-multi-step-cast-action.md): In this guide, we’ll make a multi-step cast action, within a few minutes! The cast action will go ahead and return a frame which will show the cast hash.
+- [Create Transaction Frames](https://docs.neynar.com/docs/create-transaction-frames.md): Learn how to create transaction frames that enable users to interact with blockchain transactions directly from Farcaster
+- [Debug Notifications](https://docs.neynar.com/docs/debug-notifications.md): A guide to debug the mini app notifications service if you are experiencing issues where notifications are not sending properly.
+- [Deploy a Token on Base with 1 API Call](https://docs.neynar.com/docs/deploy-token-on-base-with-api-call.md): This guide provides a step-by-step process to deploy a fungible token on the Base network using Neynar's API. The deployment process is simplified to a single API call, eliminating the need for developers to write Solidity code or handle on-chain transaction signing. Neynar covers the on-chain deployment fees and assigns the specified owner address as the token owner.
+- [Understanding number diffs](https://docs.neynar.com/docs/differences-among-client-numbers.md): Learn why follower counts, reactions, and other metrics differ across Farcaster clients and tools like Merkle, Recaster, and Coinbase Wallet
+- [Explore Event Propagation on Farcaster](https://docs.neynar.com/docs/explore-event-propagation-on-farcaster.md): Search for specific messages and debug Farcaster network health
+- [Farcaster Actions Spec](https://docs.neynar.com/docs/farcaster-actions-spec.md): Complete specification for Farcaster Actions - enabling secure cross-app communication and actions using Farcaster signers
+- [Farcaster Bot with Dedicated Signers](https://docs.neynar.com/docs/farcaster-bot-with-dedicated-signers.md): Create a Farcaster bot on Neynar in a few quick steps
+- [Features (hidden from roadmap right now)](https://docs.neynar.com/docs/features-hidden-from-roadmap-right-now.md): Upcoming Neynar features and capabilities not yet shown on the public roadmap including Frame Studio enhancements and API improvements
+- [Farcaster For You Feed](https://docs.neynar.com/docs/feed-for-you-w-external-providers.md): Retrieve a personalized For You feed for a user
+- [Casts by Embed in Farcaster](https://docs.neynar.com/docs/fetch-casts-by-embed-in-farcaster.md): Show Farcaster casts that have attachments with Neynar
+- [Relevant Holders for Coins](https://docs.neynar.com/docs/fetch-relevant-holders-for-coin.md): This guide provides an overview of how to use the Neynar API to fetch relevant holders of a fungible token.
+- [Relevant Holders for Coins](https://docs.neynar.com/docs/fetch-relevant-holders-for-coin-on-base.md): This guide provides a comprehensive overview of how to use the Neynar API to fetch relevant holders of a fungible token.
+- [Fetch signers](https://docs.neynar.com/docs/fetch-signers-1.md): The following guides show how to fetch signers if you don't have access to the custody address mnemonic of the user
+- [Fetch Signers - Backend](https://docs.neynar.com/docs/fetch-signers-backend.md): This guide demonstrates how to get a list of signers for an account if the developer has the user's mnemonic/account private key (If not check: [Frontend (Wallet Integration)](docs/fetch-signers-frontend-wallet-integration))
+- [Fetch Signers - Frontend (Wallet Integration)](https://docs.neynar.com/docs/fetch-signers-frontend-wallet-integration.md): This guide demonstrates how to get a list of signers for an account if the developer can't access the user's mnemonic. (If the developer has access to the mnemonic, check: [Backend](/docs/fetch-signers-backend))
+- [Fetch & Display Farcaster Feeds with Neynar API](https://docs.neynar.com/docs/fetching-casts-from-memes-channel-in-farcaster.md): Complete guide to fetching and displaying casts from specific Farcaster channels using Neynar SDK. Learn how to retrieve channel feeds, filter content by channel IDs, and build engaging social media applications with real-time Farcaster data.
+- [Notifications in Channels](https://docs.neynar.com/docs/fetching-channel-specific-notification-in-farcaster.md): Learn how to fetch channel-specific notifications for Farcaster users using Neynar API. Build focused notification systems that filter alerts by specific channels and parent URLs, perfect for channel-focused Farcaster clients and applications.
+- [User by Wallet Address](https://docs.neynar.com/docs/fetching-farcaster-user-based-on-ethereum-address.md): Find Farcaster user profile based on ethereum address
+- [Follow NFT Owners on Farcaster Using Neynar](https://docs.neynar.com/docs/following-all-farcaster-users-owning-cryptopunk.md): Comprehensive tutorial on how to automatically follow all Farcaster users who own specific NFTs like CryptoPunks. Learn to build Web3 social features by combining Farcaster social graphs with NFT ownership data using Neynar's powerful APIs.
+- [Farcaster Frames with Analytics using Neynar & Framejs](https://docs.neynar.com/docs/framejs-farcaster-frames.md): In this guide, we’ll learn how to make a frame with the neynar SDK and Framejs, within a few minutes! For this demo, it will be a simple rock-paper-scissors game but it will give you an idea of how to create multi-page frames, interact with buttons, and get analytics for your frame with no extra effort.
+- [Kafka Stream: Real-Time Farcaster Events via Neynar](https://docs.neynar.com/docs/from-kafka-stream.md): Ingest hydrated events from a hosted Kafka stream (as compared to dehydrated events from gRPC hub)
+- [Build Farcaster Apps with Neynar API](https://docs.neynar.com/docs/getting-started-with-neynar.md): Complete beginner's guide to building on Farcaster with Neynar
+- [Storage Units Allocation](https://docs.neynar.com/docs/getting-storage-units-allocation-of-farcaster-user.md): Fetch data about a user's storage allocation on Farcaster network with Neynar
+- [Create a Farcaster Account with Wallet Integration](https://docs.neynar.com/docs/guide-to-creating-a-farcaster-account-with-wallet-integration.md): This document outlines the steps to successfully create a Farcaster account without having a end user mnemonic.
+- [Frame Validation](https://docs.neynar.com/docs/how-to-a-frame-action-against-farcaster-hub-with-neynar-api.md): Validate incoming frame actions to get genuine data
+- [Validate Farcaster Frames with Neynar SDK](https://docs.neynar.com/docs/how-to-build-farcaster-frames-with-neynar.md): Build Farcaster frames 10x faster than starting from scratch with Neynar's frame validation API. Learn to validate frame actions, get user interaction details, and test frames locally with ngrok integration for rapid development.
+- [Choose Among Data Products](https://docs.neynar.com/docs/how-to-choose-the-right-data-product-for-you.md): Pick between pulling or pushing data in the format that works for you
+- [How to Contribute to @neynar/nodejs-sdk](https://docs.neynar.com/docs/how-to-contribute-to-neynarnodejs-sdk.md): Step-by-step guide for contributing to the Neynar Node.js SDK - from setup to submitting pull requests
+- [Create a Farcaster Client with Next.js](https://docs.neynar.com/docs/how-to-create-a-client.md): This guide will look at creating a Farcaster client using Next.js and the Neynar React SDK.
+- [Create Farcaster Bots via Script Using Neynar SDK](https://docs.neynar.com/docs/how-to-create-a-farcaster-bot.md): Complete guide to creating Farcaster bots on Neynar with automated scripts. Learn to set up bot accounts, manage dedicated signers, and deploy automated social interactions using Neynar SDK with ready-to-use examples and templates.
+- [How to Create a Farcaster Channel Feed](https://docs.neynar.com/docs/how-to-create-a-feed-based-on-an-array-of-farcaster-users-copy.md): Create a feed for any channel (i.e. parent_url) on Farcaster protocol
+- [Create new Farcaster Account](https://docs.neynar.com/docs/how-to-create-a-new-farcaster-account-with-neynar.md): Currently, this API is allowlisted. Please get in touch with us if you wish to access this feature.
+- [Dynamic Frame Creation](https://docs.neynar.com/docs/how-to-create-frames-using-the-neynar-sdk.md): Take a look at how to create frames on the fly using our SDK
+- [How to create frames without code using Frames studio](https://docs.neynar.com/docs/how-to-create-frames-without-code-using-frames-studio.md): In this guide, we’ll take a look at how to create Farcaster frames without writing a single line of code, using our Frames studio.
+- [Programmatic Webhooks](https://docs.neynar.com/docs/how-to-create-webhooks-on-the-go-using-the-sdk.md): Neynar webhooks are a way to receive real-time updates about events on the Farcaster protocol. You can use webhooks to build integrations that respond to events on the protocol, such as when a user creates a cast or when a user updates their profile.
+- [Customize SIWN - Neynar API](https://docs.neynar.com/docs/how-to-customize-sign-in-with-neynar-button-in-your-app.md): Comprehensive guide to customizing Sign In With Neynar (SIWN) for seamless Farcaster authentication. Learn to customize the sign-in experience, integrate write access permissions, and connect user accounts to your app in minutes with custom styling and branding.
+- [Overview](https://docs.neynar.com/docs/how-to-embed-farcaster-frames-in-your-app-with-neynar.md): Host Frames on your product and let users interact with them directly
+- [How to Create a Feed Based on an Array of Farcaster Users](https://docs.neynar.com/docs/how-to-fetch-farcaster-feed-for-a-given-user-copy.md): Create a feed based on a given input of Farcaster users
+- [Find Mutual Follows and Followers](https://docs.neynar.com/docs/how-to-fetch-mutual-followfollowers-in-farcaster.md): Learn how to find mutual follows and followers between Farcaster users using Neynar API. Build social discovery features like 'Followed by X users you follow' similar to Twitter, with comprehensive examples and SDK integration for enhanced user connections.
+- [How to fetch notifications for a Farcaster user](https://docs.neynar.com/docs/how-to-fetch-notification-for-a-user.md): Fetch all notifications for a given fid
+- [User Balances Directly with FID](https://docs.neynar.com/docs/how-to-fetch-user-balance-using-farcaster-fid.md): This guide provides a step-by-step approach to fetching token balances for a user using their Farcaster FID via the Neynar API.
+- [How to Get Cast Information for Farcaster Casts](https://docs.neynar.com/docs/how-to-get-cast-information-for-farcaster-casts.md): To get all information about a cast, traditionally, you have to run a hub or get access to a hosted indexer.
+- [How to fetch Farcaster feed for a given user](https://docs.neynar.com/docs/how-to-get-cast-information-for-farcaster-casts-copy-1.md): Fetch the casts that should appear on the home feed for a certain fid
+- [Farcaster URLs](https://docs.neynar.com/docs/how-to-get-cast-information-from-url.md): Convert URL into full cast data from Farcaster network through Neynar
+- [How to get relevant mints of Farcaster user](https://docs.neynar.com/docs/how-to-get-relevant-mints-of-farcaster-user.md): This guide demonstrates how to use the Neynar SDK to fetch all mint actions relevant to a contract address (and optionally tokenId for ERC1155s) given a user's Ethereum address.
+- [Trending Feed on Farcaster - Neynar API](https://docs.neynar.com/docs/how-to-get-trending-casts-on-farcaster.md): Complete tutorial on fetching trending casts and popular content from the Farcaster network using Neynar SDK. Learn to implement trending feeds, discover viral content, and build engaging social media experiences with real-time trending algorithms and content discovery.
+- [Frame Interactions](https://docs.neynar.com/docs/how-to-handle-frame-interactions-with-the-neynar-api.md): In this guide, we'll go over how to use our `POST frame/action` API to handle frame interactions on your backend.
+- [How to Ingest](https://docs.neynar.com/docs/how-to-ingest.md): Simple guide on how to ingest parquet files for Farcaster data
+- [How to integrate Neynar webhooks for real-time events](https://docs.neynar.com/docs/how-to-integrate-neynar-webhooks-for-real-time-events.md): Get real-time events for Farcaster data
+- [SIWN: Connect Farcaster accounts - Neynar API](https://docs.neynar.com/docs/how-to-let-users-connect-farcaster-accounts-with-write-access-for-free-using-sign-in-with-neynar-siwn.md): Learn how to implement Sign In With Neynar (SIWN) for seamless Farcaster authentication and authorization with read/write permissions.
+- [Neynar SQL Playground](https://docs.neynar.com/docs/how-to-query-neynar-sql-playground-for-farcaster-data.md): Query real time Farcaster data for your data analyses, create and share dashboards
+- [Zapier workflows](https://docs.neynar.com/docs/how-to-set-up-zapier-workflows-with-neynar-webhooks.md): Add Neynar to your Zap to trigger full workflows based on Farcaster events
+- [Webhooks in Dashboard](https://docs.neynar.com/docs/how-to-setup-webhooks-from-the-dashboard.md): User Neynar dev portal to set up webhooks for your app
+- [How to set up Neynar webhooks through your developer portal](https://docs.neynar.com/docs/how-to-use-neynar-webhooks.md): Setting up Farcaster webhooks through Neynar developer portal
+- [How to Use the Neynar Feed API](https://docs.neynar.com/docs/how-to-use-the-feed-api-1.md): A guide on how to get feed from the Feed API using fid, fids, and parent_url.
+- [Verify Webhooks with HMAC Signatures](https://docs.neynar.com/docs/how-to-verify-the-incoming-webhooks-using-signatures.md): This guide highlights the steps to verify incoming webhooks using signatures
+- [How writes to Farcaster work with Neynar managed signers](https://docs.neynar.com/docs/how-writes-to-farcaster-work-with-neynar-managed-signers.md): (incl. frontend)
+- [HTML & OpenGraph Metadata in Mini Apps](https://docs.neynar.com/docs/html-metadata-in-frames-and-catalogs.md): Neynar's API now supports HTML metadata for mini apps (prev. called Frames) and catalogs, providing rich information about embedded content. This feature allows you to access Open Graph (OG) data and oEmbed information for frames and catalogs, similar to how it works with casts.
+- [Farcaster Username Search in React](https://docs.neynar.com/docs/implementing-username-search-suggestion-in-your-farcaster-app.md): Show good recommendations when users search for Farcaster users in your app
+- [Indexer Service - Neynar API](https://docs.neynar.com/docs/indexer-service-pipe-farcaster-data.md): Enterprise-grade Farcaster data indexing service
+- [Write Data with Managed Signers](https://docs.neynar.com/docs/integrate-managed-signers.md): Write to Farcaster protocol and let Neynar manage your signers for you
+- [Like & Recast](https://docs.neynar.com/docs/liking-and-recasting-with-neynar-sdk.md): Add "like" and "recast" reactions on Farcaster casts
+- [Listen for @bot Mentions](https://docs.neynar.com/docs/listen-for-bot-mentions.md): Get notified when someone tags your bot in a cast
+- [Make Agents Prompt Transactions](https://docs.neynar.com/docs/make-agents-prompt-transactions.md): Agents prompt transactions to humans with Farcaster frames
+- [Farcaster Feed of NFT Owners](https://docs.neynar.com/docs/making-a-farcaster-feed-of-miladies.md): Make a Farcaster feed showing casts from a specific set of users
+- [Mini App Authentication](https://docs.neynar.com/docs/mini-app-authentication.md): Complete guide to authentication flows and developer-branded signer creation in Farcaster mini apps
+- [Common UX Mistakes and Launch Strategies for Mini Apps](https://docs.neynar.com/docs/mini-app-common-mistakes.md): Avoid these common pitfalls and learn proven launch strategies for viral Farcaster mini apps
+- [How to Build Viral Mini Apps](https://docs.neynar.com/docs/mini-app-virality-guide.md): A developer's guide to designing user experiences that spread naturally through Farcaster's social graph using Neynar's infrastructure
+- [Mint NFTs for Farcaster Users](https://docs.neynar.com/docs/mint-for-farcaster-users.md): Mint NFTs directly to Farcaster users using their FID with Neynar's server wallets
+- [Mutes, Blocks, and Bans](https://docs.neynar.com/docs/mutes-blocks-and-bans.md): Hide users and their activity based on user or developer preference
+- [Developer Ecosystem](https://docs.neynar.com/docs/neynar-developer-ecosystem-for-farcaster.md): Building blocks for developing on Farcaster protocol with Neynar infrastructure
+- [Set up Neynar with Cursor and MCP server](https://docs.neynar.com/docs/neynar-farcaster-with-cursor.md): Start developing on Farcaster with Neynar and AI enabled Cursor
+- [Neynar User Score](https://docs.neynar.com/docs/neynar-user-quality-score.md): Check for quality users using Neynar's user score
+- [Trigger Farcaster Direct Casts with Neynar Webhooks](https://docs.neynar.com/docs/neynar-webhooks-warpcast-dcs.md): In this guide, we'll send a DM based to users based on keywords in their casts using webhooks.
+- [From Parquet Exports](https://docs.neynar.com/docs/parquet.md): Ingest farcaster data into your database or data warehouse from parquet exports
+- [Parquet Schema](https://docs.neynar.com/docs/parquet-schema.md): Schema for data available in parquet ingestion
+- [Write Casts to Channel](https://docs.neynar.com/docs/posting-dank-memes-to-farcasters-memes-channel-with-neynars-sdk.md): Step-by-step guide to posting casts and content to specific Farcaster channels using Neynar SDK. Learn channel mechanics, parent URL mapping, and how to write engaging content to community channels like memes, with complete code examples and best practices.
+- [Rank High Quality Conversations](https://docs.neynar.com/docs/ranking-for-high-quality-conversations.md): Neynar APIs rank high quality casts higher
+- [SIWN: React](https://docs.neynar.com/docs/react-implementation.md): In this guide, we'll take a look at how to implement sign-in with neynar in a React app. For this guide, I am going to be using next.js but the same would work for CRA, remix, or anything based on react!
+- [Indexer Service Requirements](https://docs.neynar.com/docs/requirements-for-indexer-service.md): Reach out if you have questions
+- [Send Notifications to Mini App Users](https://docs.neynar.com/docs/send-notifications-to-mini-app-users.md): This guide walks you through a simple setup for enabling notifications for your mini app
+- [SIWN: React Native](https://docs.neynar.com/docs/sign-in-with-neynar-react-native-implementation.md): In this guide, we'll take a look at how to add sign-in with neynar to a React native application!
+- [React Native Implementation - OLD](https://docs.neynar.com/docs/sign-in-with-neynar-react-native-implementation-old.md): Legacy React Native implementation guide for Sign in with Neynar (SIWN) integration in Farcaster apps
+- [Farcaster Address Verification with EIP-712](https://docs.neynar.com/docs/smart-account-verifications.md): A step-by-step guide to verifying an Ethereum address on Farcaster using EIP-712, Privy RPC, Viem, and Neynar.
+- [Solana Integration Guide for Farcaster Mini Apps](https://docs.neynar.com/docs/solana-miniapp-features.md): Learn how to integrate Solana wallet features in your Farcaster Mini App with conditional support, message signing, and transaction handling
+- [Create and Manage Miniapp Studio Deployments](https://docs.neynar.com/docs/studio-api-miniapp-management.md): Complete guide to creating, managing, and prompting miniapp generator deployments using the Miniapp Studio API
+- [Supercharge EVM & Solana Sign-in](https://docs.neynar.com/docs/supercharge-your-sign-in-with-ethereum-onboarding-with-farcaster.md): Supercharge Sign In with Ethereum and/or Solana in your app with Farcaster profile and social graph data
+- [Trending Feed with External Providers](https://docs.neynar.com/docs/trending-feed-w-external-providers.md): Get Farcaster trending casts on a feed with other providers like OpenRank and MBD
+- [Sponsor Signers](https://docs.neynar.com/docs/two-ways-to-sponsor-a-farcaster-signer-via-neynar.md): Sponsor it yourself or let Neynar pay for it
+- [Understanding Signers in the Farcaster Protocol](https://docs.neynar.com/docs/understanding-signers-in-the-farcaster-protocol-balancing-security-and-convenience.md): By the end of this tutorial, you'll have a Farcaster signer ready to authorize messages on the Farcaster protocol.
+- [Unfollow Inactive Users](https://docs.neynar.com/docs/unfollowing-inactive-farcaster-users-with-neynar-sdk.md): Unfollow Farcaster users with Neynar
+- [ETH Address FID Contract](https://docs.neynar.com/docs/verifications-contract.md): Get an addresses' connected fid on-chain.
+- [What are Mini Apps?](https://docs.neynar.com/docs/what-are-mini-apps.md): Overview of Farcaster Mini Apps
+- [Notifications for FID](https://docs.neynar.com/docs/what-does-dwreths-farcaster-notification-look-like.md): Fetch notifications for any Farcaster user
+- [Feed of Given Farcaster FID](https://docs.neynar.com/docs/what-does-vitalikeths-farcaster-feed-look-like.md): Show a personalized feed of casts for a specific user on Farcaster
+- [How Does Farcaster CRDT Works?](https://docs.neynar.com/docs/what-is-direct-cast-in-farcaster.md): CRDTs are distributed data structures that enable decentralized networks like Farcaster to update and manage global state concurrently without needing a central authority to resolve conflicts.
+- [What is Farcaster and why is it important?](https://docs.neynar.com/docs/what-is-farcaster-and-why-is-it-important.md): WIP Vincent
+- [What is Farcaster Hub?](https://docs.neynar.com/docs/what-is-farcaster-hub.md): Farcaster is a decentralized social protocol. At the heart of it, there's the Farcaster Hub: a server that stores and replicates message-graph in the network.
+- [Choose the Right Signer](https://docs.neynar.com/docs/which-signer-should-you-use-and-why.md): Understand the differences between Neynar-branded and developer-branded signers, and pick the right option for your mini app.
+- [How writes to Farcaster work with Neynar managed signers](https://docs.neynar.com/docs/write-to-farcaster-with-neynar-managed-signers.md): Write to Farcaster without having to manage your own signers
+- [Credits Pricing](https://docs.neynar.com/external-link-0.md)
+- [NodeJS-SDK](https://docs.neynar.com/external-link-1.md)
+- [Frontend React SDK](https://docs.neynar.com/external-link-2.md)
+- [OpenAPI Specification](https://docs.neynar.com/external-link-3.md)
+- [Example Apps](https://docs.neynar.com/external-link-4.md)
+- [null](https://docs.neynar.com/index.md)
+- [null](https://docs.neynar.com/reference/app-host-get-event.md)
+- [null](https://docs.neynar.com/reference/app-host-get-user-state.md)
+- [null](https://docs.neynar.com/reference/app-host-post-event.md)
+- [null](https://docs.neynar.com/reference/associate-deployment.md)
+- [null](https://docs.neynar.com/reference/best-friends.md)
+- [null](https://docs.neynar.com/reference/buy-storage.md)
+- [Credits Pricing](https://docs.neynar.com/reference/compute-units.md): Pricing in credits for each API
+- [null](https://docs.neynar.com/reference/create-deployment.md)
+- [null](https://docs.neynar.com/reference/create-signer.md)
+- [null](https://docs.neynar.com/reference/create-transaction-pay-frame.md)
+- [null](https://docs.neynar.com/reference/delete-bans.md)
+- [null](https://docs.neynar.com/reference/delete-block.md)
+- [null](https://docs.neynar.com/reference/delete-cast.md)
+- [null](https://docs.neynar.com/reference/delete-deployment.md)
+- [null](https://docs.neynar.com/reference/delete-mute.md)
+- [null](https://docs.neynar.com/reference/delete-neynar-frame.md)
+- [null](https://docs.neynar.com/reference/delete-reaction.md)
+- [null](https://docs.neynar.com/reference/delete-verification.md)
+- [null](https://docs.neynar.com/reference/delete-webhook.md)
+- [null](https://docs.neynar.com/reference/deploy-fungible.md)
+- [Developer hosted frames](https://docs.neynar.com/reference/developer-frames.md): Build your own frames and use Neynar to
+- [null](https://docs.neynar.com/reference/fetch-all-channels.md)
+- [null](https://docs.neynar.com/reference/fetch-all-notifications.md)
+- [null](https://docs.neynar.com/reference/fetch-authorization-url.md)
+- [null](https://docs.neynar.com/reference/fetch-ban-list.md)
+- [null](https://docs.neynar.com/reference/fetch-block-list.md)
+- [null](https://docs.neynar.com/reference/fetch-bulk-casts.md)
+- [null](https://docs.neynar.com/reference/fetch-bulk-channels.md)
+- [null](https://docs.neynar.com/reference/fetch-bulk-users.md)
+- [null](https://docs.neynar.com/reference/fetch-bulk-users-by-eth-or-sol-address.md)
+- [null](https://docs.neynar.com/reference/fetch-cast-metrics.md)
+- [null](https://docs.neynar.com/reference/fetch-cast-quotes.md)
+- [null](https://docs.neynar.com/reference/fetch-cast-reactions.md)
+- [On cast](https://docs.neynar.com/reference/fetch-cast-reactions-1.md): Retrieve all reactions (likes or recasts) on a specific cast in the Farcaster network. The cast is identified by its creator's FID and unique hash. This endpoint helps track engagement metrics and user interactions with specific content.
+- [By parent cast](https://docs.neynar.com/reference/fetch-casts-by-parent.md): Retrieve all reply casts (responses) to a specific parent cast in the Farcaster network. Parent casts can be identified using either a combination of FID and hash, or by their URL. This endpoint enables traversal of conversation threads and retrieval of all responses to a particular cast.
+- [null](https://docs.neynar.com/reference/fetch-casts-for-user.md)
+- [Mentioning an FID](https://docs.neynar.com/reference/fetch-casts-mentioning-user.md): Fetch casts mentioning a user.
+- [null](https://docs.neynar.com/reference/fetch-channel-invites.md)
+- [null](https://docs.neynar.com/reference/fetch-channel-members.md)
+- [null](https://docs.neynar.com/reference/fetch-channel-notifications-for-user.md)
+- [null](https://docs.neynar.com/reference/fetch-composer-actions.md)
+- [null](https://docs.neynar.com/reference/fetch-embedded-url-metadata.md)
+- [Page of events](https://docs.neynar.com/reference/fetch-events.md): Fetch a list of events.
+- [null](https://docs.neynar.com/reference/fetch-feed.md)
+- [null](https://docs.neynar.com/reference/fetch-feed-by-channel-ids.md)
+- [null](https://docs.neynar.com/reference/fetch-feed-by-parent-urls.md)
+- [null](https://docs.neynar.com/reference/fetch-feed-for-you.md)
+- [Fetch a list of all the FIDs](https://docs.neynar.com/reference/fetch-fids.md): Fetch a list of all the FIDs.
+- [null](https://docs.neynar.com/reference/fetch-follow-suggestions.md)
+- [null](https://docs.neynar.com/reference/fetch-followers-for-a-channel.md)
+- [null](https://docs.neynar.com/reference/fetch-frame-catalog.md)
+- [null](https://docs.neynar.com/reference/fetch-frame-relevant.md)
+- [null](https://docs.neynar.com/reference/fetch-frames-only-feed.md)
+- [null](https://docs.neynar.com/reference/fetch-fungible-trades.md)
+- [null](https://docs.neynar.com/reference/fetch-fungibles.md)
+- [null](https://docs.neynar.com/reference/fetch-mute-list.md)
+- [null](https://docs.neynar.com/reference/fetch-neynar-frames.md)
+- [null](https://docs.neynar.com/reference/fetch-nonce.md)
+- [null](https://docs.neynar.com/reference/fetch-notification-tokens.md)
+- [null](https://docs.neynar.com/reference/fetch-notifications-by-parent-url-for-user.md)
+- [null](https://docs.neynar.com/reference/fetch-popular-casts-by-user.md)
+- [null](https://docs.neynar.com/reference/fetch-power-users.md)
+- [null](https://docs.neynar.com/reference/fetch-power-users-lite.md)
+- [To a target URL](https://docs.neynar.com/reference/fetch-reactions-by-target.md): Fetch all reactions of a specific type (like or recast) that target a given URL. This endpoint is useful for tracking engagement with content across the Farcaster network.
+- [null](https://docs.neynar.com/reference/fetch-relevant-followers.md)
+- [null](https://docs.neynar.com/reference/fetch-relevant-followers-for-a-channel.md)
+- [null](https://docs.neynar.com/reference/fetch-relevant-fungible-owners.md)
+- [null](https://docs.neynar.com/reference/fetch-replies-and-recasts-for-user.md)
+- [null](https://docs.neynar.com/reference/fetch-signers.md)
+- [null](https://docs.neynar.com/reference/fetch-subscribed-to-for-fid.md)
+- [null](https://docs.neynar.com/reference/fetch-subscribers-for-fid.md)
+- [null](https://docs.neynar.com/reference/fetch-subscription-check.md)
+- [null](https://docs.neynar.com/reference/fetch-subscriptions-for-fid.md)
+- [null](https://docs.neynar.com/reference/fetch-trending-channels.md)
+- [null](https://docs.neynar.com/reference/fetch-trending-feed.md)
+- [null](https://docs.neynar.com/reference/fetch-trending-fungibles.md)
+- [null](https://docs.neynar.com/reference/fetch-user-balance.md)
+- [null](https://docs.neynar.com/reference/fetch-user-channel-memberships.md)
+- [null](https://docs.neynar.com/reference/fetch-user-channels.md)
+- [Fetch UserData for a FID](https://docs.neynar.com/reference/fetch-user-data.md): **Note:** one of two different response schemas is returned based on whether the caller provides the `user_data_type` parameter. If included, a single `UserDataAdd` message is returned (or a `not_found` error). If omitted, a paginated list of `UserDataAdd` messages is returned instead.
+- [null](https://docs.neynar.com/reference/fetch-user-followers.md)
+- [To target FID](https://docs.neynar.com/reference/fetch-user-followers-1.md): Fetch a list of users that are following a user.
+- [null](https://docs.neynar.com/reference/fetch-user-following.md)
+- [From source FID](https://docs.neynar.com/reference/fetch-user-following-1.md): Fetch a list of users that a user is following.
+- [null](https://docs.neynar.com/reference/fetch-user-following-feed.md)
+- [Fetch User Information](https://docs.neynar.com/reference/fetch-user-information.md)
+- [null](https://docs.neynar.com/reference/fetch-user-interactions.md)
+- [Fetch a list of on-chain events provided by an FID](https://docs.neynar.com/reference/fetch-user-on-chain-events.md): Fetch on-chain events provided by a user.
+- [Fetch a list of signers provided by an FID](https://docs.neynar.com/reference/fetch-user-on-chain-signers-events.md): **Note:** one of two different response schemas is returned based on whether the caller provides the `signer` parameter. If included, a single `OnChainEventSigner` message is returned (or a `not_found` error). If omitted, a non-paginated list of `OnChainEventSigner` messages is returned instead.
+- [null](https://docs.neynar.com/reference/fetch-user-reactions.md)
+- [By FID](https://docs.neynar.com/reference/fetch-user-reactions-1.md): Fetch reactions by a user.
+- [null](https://docs.neynar.com/reference/fetch-user-reciprocal-followers.md)
+- [Proof for a username](https://docs.neynar.com/reference/fetch-username-proof-by-name.md): Fetch a proof for a username.
+- [Proofs provided by an FID](https://docs.neynar.com/reference/fetch-username-proofs-by-fid.md): Fetch proofs provided by a user.
+- [null](https://docs.neynar.com/reference/fetch-users-active-channels.md)
+- [null](https://docs.neynar.com/reference/fetch-users-by-location.md)
+- [By FID](https://docs.neynar.com/reference/fetch-users-casts-1.md): Fetch user's casts.
+- [null](https://docs.neynar.com/reference/fetch-validate-frame-analytics.md)
+- [null](https://docs.neynar.com/reference/fetch-validate-frame-list.md)
+- [Provided by an FID](https://docs.neynar.com/reference/fetch-verifications-by-fid.md): Fetch verifications provided by a user.
+- [null](https://docs.neynar.com/reference/fetch-webhooks.md)
+- [null](https://docs.neynar.com/reference/follow-channel.md)
+- [null](https://docs.neynar.com/reference/follow-user.md)
+- [null](https://docs.neynar.com/reference/get-deployment.md)
+- [null](https://docs.neynar.com/reference/get-fresh-account-fid.md)
+- [null](https://docs.neynar.com/reference/get-nft-mint.md)
+- [null](https://docs.neynar.com/reference/get-transaction-pay-frame.md)
+- [Getting Started with Neynar Go SDK](https://docs.neynar.com/reference/getting-started-with-go-sdk.md): Easily call Neynar APIs with our Go SDK
+- [Getting Started with Neynar NodeJS SDK](https://docs.neynar.com/reference/getting-started-with-nodejs-sdk.md): Easily call Neynar APIs with our nodejs sdk
+- [Getting Started with Neynar Rust SDK](https://docs.neynar.com/reference/getting-started-with-rust-sdk.md): Easily call Neynar APIs with our Rust SDK
+- [null](https://docs.neynar.com/reference/invite-channel-member.md)
+- [null](https://docs.neynar.com/reference/is-fname-available.md)
+- [null](https://docs.neynar.com/reference/list-deployments.md)
+- [By FID and Hash](https://docs.neynar.com/reference/lookup-cast-by-hash-and-fid.md): Lookup a cast by its FID and hash.
+- [null](https://docs.neynar.com/reference/lookup-cast-by-hash-or-url.md)
+- [null](https://docs.neynar.com/reference/lookup-cast-conversation.md)
+- [null](https://docs.neynar.com/reference/lookup-cast-conversation-summary.md)
+- [null](https://docs.neynar.com/reference/lookup-channel.md)
+- [null](https://docs.neynar.com/reference/lookup-developer-managed-auth-address.md)
+- [null](https://docs.neynar.com/reference/lookup-developer-managed-signer.md)
+- [Event by ID](https://docs.neynar.com/reference/lookup-event.md): Lookup an event by its ID.
+- [Sync Methods](https://docs.neynar.com/reference/lookup-hub-info.md): Retrieve hub information.
+- [null](https://docs.neynar.com/reference/lookup-neynar-frame.md)
+- [Fetch an on-chain ID Registry Event for a given Address](https://docs.neynar.com/reference/lookup-on-chain-id-registry-event-by-address.md): Fetch an on-chain ID Registry Event for a given Address.
+- [By FID or cast](https://docs.neynar.com/reference/lookup-reaction-by-id.md): Lookup a reaction by its FID or cast.
+- [null](https://docs.neynar.com/reference/lookup-signer.md)
+- [null](https://docs.neynar.com/reference/lookup-user-by-custody-address.md)
+- [null](https://docs.neynar.com/reference/lookup-user-by-username.md)
+- [By its FID and target FID](https://docs.neynar.com/reference/lookup-user-relation.md): Lookup a link by its FID and target FID.
+- [null](https://docs.neynar.com/reference/lookup-user-storage-allocations.md)
+- [FID's limits](https://docs.neynar.com/reference/lookup-user-storage-limit.md): Fetch a user's storage limits.
+- [null](https://docs.neynar.com/reference/lookup-user-storage-usage.md)
+- [null](https://docs.neynar.com/reference/lookup-users-by-x-username.md)
+- [null](https://docs.neynar.com/reference/lookup-webhook.md)
+- [null](https://docs.neynar.com/reference/mark-notifications-as-seen.md)
+- [Using Github Copilot](https://docs.neynar.com/reference/migrate-to-neynar-nodejs-sdk-v2-using-github-copilot.md)
+- [Neynar API Overview](https://docs.neynar.com/reference/neynar-farcaster-api-overview.md): Neynar API overview
+- [SDK v1 to v2 migration guide](https://docs.neynar.com/reference/neynar-nodejs-sdk-v1-to-v2-migration-guide.md)
+- [null](https://docs.neynar.com/reference/post-frame-action.md)
+- [null](https://docs.neynar.com/reference/post-frame-action-developer-managed.md)
+- [null](https://docs.neynar.com/reference/post-nft-mint.md)
+- [null](https://docs.neynar.com/reference/prompt-deployment.md)
+- [null](https://docs.neynar.com/reference/prompt-deployment-stream.md)
+- [null](https://docs.neynar.com/reference/publish-bans.md)
+- [null](https://docs.neynar.com/reference/publish-block.md)
+- [null](https://docs.neynar.com/reference/publish-cast.md)
+- [null](https://docs.neynar.com/reference/publish-farcaster-action.md)
+- [null](https://docs.neynar.com/reference/publish-frame-notifications.md)
+- [Submit signed message](https://docs.neynar.com/reference/publish-message.md): Submit a message to the Farcaster network.
+- [null](https://docs.neynar.com/reference/publish-message-to-farcaster.md)
+- [null](https://docs.neynar.com/reference/publish-mute.md)
+- [null](https://docs.neynar.com/reference/publish-neynar-frame.md)
+- [null](https://docs.neynar.com/reference/publish-reaction.md)
+- [null](https://docs.neynar.com/reference/publish-verification.md)
+- [null](https://docs.neynar.com/reference/publish-webhook.md)
+- [Quickstart](https://docs.neynar.com/reference/quickstart.md): Getting started with the Neynar Farcaster API
+- [null](https://docs.neynar.com/reference/register-account.md)
+- [null](https://docs.neynar.com/reference/register-account-onchain.md)
+- [Register New user](https://docs.neynar.com/reference/register-new-user.md): Register new user on Farcaster protocol
+- [null](https://docs.neynar.com/reference/register-signed-key.md)
+- [null](https://docs.neynar.com/reference/register-signed-key-for-developer-managed-auth-address.md)
+- [null](https://docs.neynar.com/reference/register-signed-key-for-developer-managed-signer.md)
+- [null](https://docs.neynar.com/reference/remove-channel-member.md)
+- [null](https://docs.neynar.com/reference/respond-channel-invite.md)
+- [null](https://docs.neynar.com/reference/search-casts.md)
+- [null](https://docs.neynar.com/reference/search-channels.md)
+- [null](https://docs.neynar.com/reference/search-frames.md)
+- [null](https://docs.neynar.com/reference/search-user.md)
+- [null](https://docs.neynar.com/reference/send-fungibles-to-users.md)
+- [null](https://docs.neynar.com/reference/unfollow-channel.md)
+- [null](https://docs.neynar.com/reference/unfollow-user.md)
+- [Update Follow / Unfollow](https://docs.neynar.com/reference/update-follow-unfollow.md): Follow a new user or unfollow an existing user, for a given Farcaster user
+- [null](https://docs.neynar.com/reference/update-neynar-frame.md)
+- [null](https://docs.neynar.com/reference/update-user.md)
+- [Overview](https://docs.neynar.com/reference/update-user-profile-1.md): Update profile information and connected addresses
+- [null](https://docs.neynar.com/reference/update-webhook.md)
+- [null](https://docs.neynar.com/reference/update-webhook-active-status.md)
+- [null](https://docs.neynar.com/reference/validate-frame-action.md)
+- [Validate signed message](https://docs.neynar.com/reference/validate-message.md): Validate a message on the Farcaster network.
+- [Rate Limits](https://docs.neynar.com/reference/what-are-the-rate-limits-on-neynar-apis.md): Rate limits are set per subscription plan
+
+
+## Optional
+
+- [Status](https://status.neynar.com/)
+- [Blog](https://neynar.com/blog)
+- [Get Help →](https://join.slack.com/t/neynarcommunity/shared_invite/zt-3a4zrezxu-ePFVx2wKHvot1TLi2mVHkA)
