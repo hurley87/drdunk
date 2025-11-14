@@ -4,6 +4,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 
 const SIGNATURE_HEADER = "x-neynar-signature";
 const SCORE_THRESHOLD = 0.2;
+const REQUIRED_KEYWORDS = ["present", "gift"];
 
 type NeynarWebhookEvent = {
   event?: string;
@@ -90,6 +91,19 @@ function extractMentionedFids(payload: NeynarWebhookEvent): number[] {
   return fids;
 }
 
+function extractCastText(payload: NeynarWebhookEvent): string | null {
+  if (isRecord(payload.data) && typeof payload.data.text === "string") {
+    return payload.data.text;
+  }
+  return null;
+}
+
+function hasRequiredKeywords(text: string | null): boolean {
+  if (!text) return false;
+  const lowerText = text.toLowerCase();
+  return REQUIRED_KEYWORDS.some((keyword) => lowerText.includes(keyword));
+}
+
 // [drdunk] Neynar webhook event cast.created {
 //   created_at: 1763136659,
 //   type: 'cast.created',
@@ -169,6 +183,15 @@ export async function POST(request: Request) {
   if (score !== null && score <= SCORE_THRESHOLD) {
     console.warn("[drdunk] Neynar score is too low", score, eventPayload);
     return NextResponse.json({ error: "Score is too low" }, { status: 403 });
+  }
+
+  const castText = extractCastText(eventPayload);
+  if (!hasRequiredKeywords(castText)) {
+    console.warn("[drdunk] No required keywords present in cast text", castText);
+    return NextResponse.json(
+      { error: "No required keywords present" },
+      { status: 403 },
+    );
   }
 
   const eventName = eventPayload.event ?? eventPayload.type ?? "unknown";
