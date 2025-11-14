@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 
 const SIGNATURE_HEADER = "x-neynar-signature";
-const SIGNATURE_PREFIX = "sha256=";
 const SCORE_THRESHOLD = 0.2;
 
 type NeynarWebhookEvent = {
@@ -26,15 +25,11 @@ function verifyNeynarSignature(body: string, signature: string | null) {
     return false;
   }
 
-  const normalizedSignature = signature.startsWith(SIGNATURE_PREFIX)
-    ? signature.slice(SIGNATURE_PREFIX.length)
-    : signature;
-
   const expected = Buffer.from(
-    createHmac("sha256", secret).update(body).digest("hex"),
+    createHmac("sha512", secret).update(body).digest("hex"),
   );
 
-  const provided = Buffer.from(normalizedSignature);
+  const provided = Buffer.from(signature);
 
   if (expected.length !== provided.length) {
     return false;
@@ -76,6 +71,23 @@ function extractScore(payload: NeynarWebhookEvent): number | null {
   }
 
   return null;
+}
+
+function extractMentionedFids(payload: NeynarWebhookEvent): number[] {
+  const fids: number[] = [];
+
+  if (isRecord(payload.data)) {
+    const mentionedProfiles = payload.data.mentioned_profiles;
+    if (Array.isArray(mentionedProfiles)) {
+      for (const profile of mentionedProfiles) {
+        if (isRecord(profile) && typeof profile.fid === "number") {
+          fids.push(profile.fid);
+        }
+      }
+    }
+  }
+
+  return fids;
 }
 
 // [drdunk] Neynar webhook event cast.created {
@@ -160,8 +172,13 @@ export async function POST(request: Request) {
   }
 
   const eventName = eventPayload.event ?? eventPayload.type ?? "unknown";
+  const mentionedFids = extractMentionedFids(eventPayload);
 
   console.log("[drdunk] Neynar webhook event", eventName, eventPayload);
+  console.log("[drdunk] Mentioned FIDs:", mentionedFids);
 
-  return NextResponse.json({ success: true }, { status: 200 });
+  return NextResponse.json(
+    { success: true, mentionedFids },
+    { status: 200 },
+  );
 }
