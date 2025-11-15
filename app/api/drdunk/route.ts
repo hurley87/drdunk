@@ -116,6 +116,23 @@ function extractCastText(payload: NeynarWebhookEvent): string | null {
   return null;
 }
 
+function extractCastHash(payload: NeynarWebhookEvent): string | null {
+  if (isRecord(payload.data) && typeof payload.data.hash === "string") {
+    return payload.data.hash;
+  }
+  return null;
+}
+
+function extractAuthorFid(payload: NeynarWebhookEvent): number | null {
+  if (isRecord(payload.data)) {
+    const author = payload.data.author;
+    if (isRecord(author) && typeof author.fid === "number") {
+      return author.fid;
+    }
+  }
+  return null;
+}
+
 function hasRequiredKeywords(text: string | null): boolean {
   if (!text) return false;
   const lowerText = text.toLowerCase();
@@ -128,22 +145,54 @@ async function analyzeGiftIntent(castText: string) {
     schema: giftAnalysisSchema,
     prompt: `You are Dr. Dunk, a gift-giving bot on Farcaster. Analyze this cast to determine if the user wants to buy a present for someone else.
 
-IMPORTANT: Users can ONLY buy presents for OTHER PEOPLE, not for themselves.
+IMPORTANT RULES:
+1. Users can ONLY buy presents for OTHER PEOPLE, not for themselves.
+2. NEVER use @mentions or usernames in your reply text - this could create infinite loops!
+3. Keep replies generic and friendly without addressing specific users by name.
 
 Cast text: "${castText}"
 
 Determine:
 1. Is the user asking to buy a present for someone else? (Look for mentions of other people, usernames, or requests to gift someone)
 2. Who is the intended recipient? (Must be someone other than the asker - look for @mentions, names, or references to other people)
-3. Generate a friendly reply:
+3. Generate a friendly reply WITHOUT using any @mentions or usernames:
    - If they're asking for a present for THEMSELVES: Politely explain they can only buy presents for OTHER PEOPLE, and encourage them to pick someone to gift
    - If they're asking to buy a present for SOMEONE ELSE: Acknowledge their generosity and tell them they can proceed to buy one (be enthusiastic!)
    - If they're just mentioning the keywords without clear intent: Remind them they can buy presents for friends and other people on Farcaster
 
-Keep the tone fun and encouraging!`,
+Keep the tone fun and encouraging, but NEVER include @mentions or usernames!`,
   });
 
   return result.object;
+}
+
+async function postCastReply(
+  text: string,
+  parentHash: string,
+  parentAuthorFid: number,
+  embedUrl: string,
+) {
+  const response = await fetch("https://api.neynar.com/v2/farcaster/cast", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": env.NEYNAR_API_KEY,
+    },
+    body: JSON.stringify({
+      signer_uuid: env.SIGNER_UUID,
+      text,
+      parent: parentHash,
+      parent_author_fid: parentAuthorFid,
+      embeds: [{ url: embedUrl }],
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to post cast reply: ${error}`);
+  }
+
+  return response.json();
 }
 
 // [drdunk] Neynar webhook event cast.created {
@@ -227,6 +276,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Score is too low" }, { status: 403 });
   }
 
+  // Check if the cast author is the bot itself to prevent infinite loops
+  const authorFid = extractAuthorFid(eventPayload);
+  if (authorFid === env.BOT_FID) {
+    console.log("[drdunk] Ignoring cast from bot itself to prevent loop");
+    return NextResponse.json(
+      { success: true, message: "Ignored own cast" },
+      { status: 200 },
+    );
+  }
+
   const castText = extractCastText(eventPayload);
   if (!hasRequiredKeywords(castText)) {
     console.warn("[drdunk] No required keywords present in cast text", castText);
@@ -238,10 +297,13 @@ export async function POST(request: Request) {
 
   const eventName = eventPayload.event ?? eventPayload.type ?? "unknown";
   const mentionedFids = extractMentionedFids(eventPayload);
+  const castHash = extractCastHash(eventPayload);
 
   console.log("[drdunk] Neynar webhook event", eventName, eventPayload);
   console.log("[drdunk] Mentioned FIDs:", mentionedFids);
   console.log("[drdunk] Cast text:", castText);
+  console.log("[drdunk] Cast hash:", castHash);
+  console.log("[drdunk] Author FID:", authorFid);
 
   // Analyze the gift intent with LLM
   let giftAnalysis;
@@ -250,7 +312,7 @@ export async function POST(request: Request) {
     console.log("[drdunk] Gift analysis:", giftAnalysis);
   } catch (error) {
     console.error("[drdunk] Failed to analyze gift intent:", error);
-    
+
     // Handle specific error types
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
@@ -267,9 +329,44 @@ export async function POST(request: Request) {
       {
         error: "Failed to analyze gift intent",
         message: errorMessage,
-        type: statusCode === 429 ? "rate_limit" : statusCode === 401 ? "auth_error" : "api_error",
+        type:
+          statusCode === 429
+            ? "rate_limit"
+            : statusCode === 401
+              ? "auth_error"
+              : "api_error",
       },
       { status: statusCode },
+    );
+  }
+
+  // Post the reply cast
+  let castReply;
+  try {
+    if (!castHash || !authorFid) {
+      throw new Error("Missing cast hash or author FID");
+    }
+
+    castReply = await postCastReply(
+      giftAnalysis.replyText,
+      castHash,
+      authorFid,
+      env.NEXT_PUBLIC_URL,
+    );
+    console.log("[drdunk] Posted reply cast:", castReply);
+  } catch (error) {
+    console.error("[drdunk] Failed to post reply cast:", error);
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+
+    return NextResponse.json(
+      {
+        error: "Failed to post reply cast",
+        message: errorMessage,
+        giftAnalysis,
+      },
+      { status: 500 },
     );
   }
 
@@ -278,6 +375,7 @@ export async function POST(request: Request) {
       success: true,
       mentionedFids,
       giftAnalysis,
+      castReply,
     },
     { status: 200 },
   );
