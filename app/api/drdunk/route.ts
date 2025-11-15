@@ -1,6 +1,9 @@
 import { env } from "@/lib/env";
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
+import { generateObject } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { z } from "zod";
 
 const SIGNATURE_HEADER = "x-neynar-signature";
 const SCORE_THRESHOLD = 0.2;
@@ -14,6 +17,21 @@ type NeynarWebhookEvent = {
   data?: Record<string, unknown>;
   [key: string]: unknown;
 };
+
+const giftAnalysisSchema = z.object({
+  isAskingForPresent: z
+    .boolean()
+    .describe("Whether the user is asking for a present/gift"),
+  recipient: z
+    .string()
+    .nullable()
+    .describe("The intended recipient of the gift, or null if not specified"),
+  replyText: z
+    .string()
+    .describe(
+      "A friendly reply message - either remind them they can ask for a present, or offer to let them buy one",
+    ),
+});
 
 function verifyNeynarSignature(body: string, signature: string | null) {
   const secret = env.NEYNAR_WEBHOOK_SECRET;
@@ -102,6 +120,30 @@ function hasRequiredKeywords(text: string | null): boolean {
   if (!text) return false;
   const lowerText = text.toLowerCase();
   return REQUIRED_KEYWORDS.some((keyword) => lowerText.includes(keyword));
+}
+
+async function analyzeGiftIntent(castText: string) {
+  const result = await generateObject({
+    model: openai("gpt-4o-mini"),
+    schema: giftAnalysisSchema,
+    prompt: `You are Dr. Dunk, a gift-giving bot on Farcaster. Analyze this cast to determine if the user wants to buy a present for someone else.
+
+IMPORTANT: Users can ONLY buy presents for OTHER PEOPLE, not for themselves.
+
+Cast text: "${castText}"
+
+Determine:
+1. Is the user asking to buy a present for someone else? (Look for mentions of other people, usernames, or requests to gift someone)
+2. Who is the intended recipient? (Must be someone other than the asker - look for @mentions, names, or references to other people)
+3. Generate a friendly reply:
+   - If they're asking for a present for THEMSELVES: Politely explain they can only buy presents for OTHER PEOPLE, and encourage them to pick someone to gift
+   - If they're asking to buy a present for SOMEONE ELSE: Acknowledge their generosity and tell them they can proceed to buy one (be enthusiastic!)
+   - If they're just mentioning the keywords without clear intent: Remind them they can buy presents for friends and other people on Farcaster
+
+Keep the tone fun and encouraging!`,
+  });
+
+  return result.object;
 }
 
 // [drdunk] Neynar webhook event cast.created {
@@ -199,9 +241,44 @@ export async function POST(request: Request) {
 
   console.log("[drdunk] Neynar webhook event", eventName, eventPayload);
   console.log("[drdunk] Mentioned FIDs:", mentionedFids);
+  console.log("[drdunk] Cast text:", castText);
+
+  // Analyze the gift intent with LLM
+  let giftAnalysis;
+  try {
+    giftAnalysis = await analyzeGiftIntent(castText!);
+    console.log("[drdunk] Gift analysis:", giftAnalysis);
+  } catch (error) {
+    console.error("[drdunk] Failed to analyze gift intent:", error);
+    
+    // Handle specific error types
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    const statusCode =
+      errorMessage.includes("rate limit") ||
+      errorMessage.includes("429") ||
+      errorMessage.includes("quota")
+        ? 429
+        : errorMessage.includes("401") || errorMessage.includes("unauthorized")
+          ? 401
+          : 500;
+
+    return NextResponse.json(
+      {
+        error: "Failed to analyze gift intent",
+        message: errorMessage,
+        type: statusCode === 429 ? "rate_limit" : statusCode === 401 ? "auth_error" : "api_error",
+      },
+      { status: statusCode },
+    );
+  }
 
   return NextResponse.json(
-    { success: true, mentionedFids },
+    {
+      success: true,
+      mentionedFids,
+      giftAnalysis,
+    },
     { status: 200 },
   );
 }
