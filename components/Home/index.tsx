@@ -1,13 +1,47 @@
 "use client";
 
 import { useUser } from "@/contexts/user-context";
+import { useMiniApp } from "@/contexts/miniapp-context";
+import { env } from "@/lib/env";
 import Image from "next/image";
 import { useAccount } from "wagmi";
+import { useState, useEffect } from "react";
 
 export default function Home() {
-  const { user, isLoading, error, signIn } = useUser();
-
+  const { user, isLoading, signIn } = useUser();
   const { address } = useAccount();
+  const { context } = useMiniApp();
+  const [mentionedFids, setMentionedFids] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (context?.location) {
+      console.log("[Home] Context location:", context.location);
+
+      // Parse FIDs from the cast embed URL
+      const embedUrl = (context.location as any)?.cast?.embed;
+
+      if (embedUrl && typeof embedUrl === "string") {
+        try {
+          const url = new URL(embedUrl);
+          const fidsParam = url.searchParams.get("fids");
+
+          if (fidsParam) {
+            const botFid = env.NEXT_PUBLIC_BOT_FID;
+            const fids = fidsParam
+              .split(",")
+              .map((fid) => parseInt(fid.trim(), 10))
+              .filter((fid) => !isNaN(fid) && fid !== botFid); // Exclude BOT_FID
+            setMentionedFids(fids);
+            console.log("[Home] Mentioned FIDs from embed:", fids);
+          }
+        } catch (error) {
+          console.error("[Home] Failed to parse embed URL:", error);
+        }
+      }
+    }
+  }, [context]);
+
+  console.log("[Home] Mini app context:", context);
 
   return (
     <div className="bg-white text-black flex min-h-screen flex-col items-center justify-center p-4">
@@ -23,6 +57,27 @@ export default function Home() {
               )}`
             : "No address found"}
         </p>
+
+        {mentionedFids.length > 0 && (
+          <div className="mt-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+            <h2 className="text-xl font-semibold mb-2 text-purple-900">
+              Mentioned Users
+            </h2>
+            <p className="text-sm text-purple-700 mb-3">
+              Gift recipients (FIDs):
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {mentionedFids.map((fid) => (
+                <span
+                  key={fid}
+                  className="px-3 py-1 bg-purple-600 text-white rounded-full text-sm font-medium"
+                >
+                  FID: {fid}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {!user?.data ? (
           <button

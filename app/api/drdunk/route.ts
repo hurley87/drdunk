@@ -347,11 +347,17 @@ export async function POST(request: Request) {
       throw new Error("Missing cast hash or author FID");
     }
 
+    // Build embed URL with mentioned FIDs as query parameters
+    const embedUrl = new URL(env.NEXT_PUBLIC_URL);
+    if (mentionedFids.length > 0) {
+      embedUrl.searchParams.set("fids", mentionedFids.join(","));
+    }
+
     castReply = await postCastReply(
       giftAnalysis.replyText,
       castHash,
       authorFid,
-      env.NEXT_PUBLIC_URL,
+      embedUrl.toString(),
     );
     console.log("[drdunk] Posted reply cast:", castReply);
   } catch (error) {
