@@ -13,12 +13,14 @@ export default function Home() {
   const { context } = useMiniApp();
   const [mentionedFids, setMentionedFids] = useState<number[]>([]);
 
+  console.log("[Home] context:", context);
+
   useEffect(() => {
+
     if (context?.location) {
-      console.log("[Home] Context location:", context.location);
 
       // Parse FIDs from the cast embed URL
-      const embedUrl = (context.location as any)?.cast?.embed;
+      const embedUrl = (context.location as any)?.embed;
 
       if (embedUrl && typeof embedUrl === "string") {
         try {
@@ -39,7 +41,7 @@ export default function Home() {
         }
       }
     }
-  }, [context]);
+  }, [context?.location]);
 
   console.log("[Home] Mini app context:", context);
 
