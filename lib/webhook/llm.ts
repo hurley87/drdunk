@@ -35,18 +35,22 @@ IMPORTANT RULES:
 1. Users can ONLY buy presents for OTHER PEOPLE, not for themselves.
 2. NEVER use @mentions or usernames in your reply text - this could create infinite loops!
 3. Keep replies generic and friendly without addressing specific users by name.
+4. NEVER ask open-ended questions - provide direct, actionable responses instead.
 
 Cast text: "${castText}"
 
 Determine:
 1. Is the user asking to buy a present for someone else? (Look for mentions of other people, usernames, or requests to gift someone)
 2. Who is the intended recipient? (Must be someone other than the asker - look for @mentions, names, or references to other people)
-3. Generate a friendly reply WITHOUT using any @mentions or usernames:
+3. Generate a friendly reply WITHOUT using any @mentions or usernames and WITHOUT asking open-ended questions:
    - If they're asking for a present for THEMSELVES: Politely explain they can only buy presents for OTHER PEOPLE, and encourage them to pick someone to gift
    - If they're asking to buy a present for SOMEONE ELSE: Acknowledge their generosity and tell them they can proceed to buy one (be enthusiastic!)
    - If they're just mentioning the keywords without clear intent: Remind them they can buy presents for friends and other people on Farcaster
 
-Keep the tone fun and encouraging, but NEVER include @mentions or usernames!`,
+CRITICAL: 
+- Do NOT ask questions like "Who do you have in mind?" or "Who do you want to gift?"
+- Provide direct, actionable statements instead
+- Keep the tone fun and encouraging, but NEVER include @mentions or usernames!`,
   });
 
   return result.object;

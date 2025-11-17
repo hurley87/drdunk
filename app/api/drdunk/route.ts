@@ -55,9 +55,11 @@ export async function POST(request: Request) {
   const eventName = extractEventName(eventPayload);
 
   // Validation checks
+  // Note: These return 200 (not 403/400) to prevent Neynar from retrying the webhook
+  // Validation failures are expected and should be handled gracefully without retries
   if (!meetsScoreThreshold(score, SCORE_THRESHOLD)) {
     console.warn("[drdunk] Score too low:", score);
-    return NextResponse.json({ error: "Score too low" }, { status: 403 });
+    return NextResponse.json({ error: "Score too low" }, { status: 200 });
   }
 
   if (isOwnCast(authorFid, env.BOT_FID)) {
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
     console.warn("[drdunk] No required keywords");
     return NextResponse.json(
       { error: "No required keywords" },
-      { status: 403 },
+      { status: 200 },
     );
   }
 
@@ -111,6 +113,9 @@ export async function POST(request: Request) {
     }
 
     const embedUrl = buildEmbedUrl(env.NEXT_PUBLIC_URL, mentionedFids);
+
+    console.log("[drdunk] Embed URL:", embedUrl);
+    
     const castReply = await postCastReply(
       giftAnalysis.replyText,
       castHash,
