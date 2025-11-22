@@ -12,6 +12,8 @@ export const env = createEnv({
     OPENAI_API_KEY: z.string().min(1),
     SIGNER_UUID: z.string().min(1),
     BOT_FID: z.coerce.number().int().positive(),
+    SUPABASE_URL: z.string().min(1).optional(),
+    SUPABASE_ANON_KEY: z.string().min(1).optional(),
   },
   client: {
     NEXT_PUBLIC_URL: z.string().min(1),

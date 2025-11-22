@@ -7,8 +7,19 @@ if (!env.REDIS_URL || !env.REDIS_TOKEN) {
   );
 }
 
+// Validate Redis URL format before creating client to avoid build-time errors
+const isValidRedisUrl = (url: string | undefined): boolean => {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
 export const redis =
-  env.REDIS_URL && env.REDIS_TOKEN
+  env.REDIS_URL && env.REDIS_TOKEN && isValidRedisUrl(env.REDIS_URL)
     ? new Redis({
         url: env.REDIS_URL,
         token: env.REDIS_TOKEN,

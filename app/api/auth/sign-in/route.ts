@@ -24,7 +24,7 @@ export const POST = async (req: NextRequest) => {
     });
     isValidSignature = !!payload;
     fid = Number(payload.sub);
-    walletAddress = payload.address as `0x${string}`;
+    walletAddress = (payload as any).address as `0x${string}` || zeroAddress;
     expirationTime = payload.exp ?? Date.now() + 7 * 24 * 60 * 60 * 1000;
   } catch (e) {
     if (e instanceof Errors.InvalidTokenError) {

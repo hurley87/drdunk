@@ -1,4 +1,5 @@
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
@@ -26,16 +27,22 @@ export const useApiQuery = <TData, TBody = unknown>(
   return useQuery<TData>({
     ...queryOptions,
     queryFn: async () => {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          ...(body && { "Content-Type": "application/json" }),
-        },
-        ...(isProtected && {
-          credentials: "include",
-        }),
-        ...(body && { body: JSON.stringify(body) }),
-      });
+      // Use Quick Auth fetch for protected routes, regular fetch for public routes
+      const response = isProtected
+        ? await sdk.quickAuth.fetch(url, {
+            method,
+            headers: {
+              ...(body && { "Content-Type": "application/json" }),
+            },
+            ...(body && { body: JSON.stringify(body) }),
+          })
+        : await fetch(url, {
+            method,
+            headers: {
+              ...(body && { "Content-Type": "application/json" }),
+            },
+            ...(body && { body: JSON.stringify(body) }),
+          });
 
       if (!response.ok) {
         throw new Error(`API Error: ${response.status}`);
