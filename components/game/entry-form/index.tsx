@@ -315,7 +315,7 @@ export default function EntryForm() {
 
   return (
     <div className="w-full">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         <div>
           <label
             htmlFor="dunkText"
@@ -329,8 +329,8 @@ export default function EntryForm() {
             onChange={(e) => setDunkText(e.target.value)}
             placeholder="Write something fire... make them laugh, make them think, or make them react! 🎯"
             rows={5}
-            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none transition-colors ${
-              errors.dunkText ? "border-red-500" : "border-gray-200"
+            className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none transition-all duration-200 text-base ${
+              errors.dunkText ? "border-red-500 focus:ring-red-500" : "border-gray-200 focus:shadow-glow-orange"
             }`}
             disabled={isLoading}
           />
@@ -357,8 +357,8 @@ export default function EntryForm() {
             value={parentCastUrl}
             onChange={(e) => setParentCastUrl(e.target.value)}
             placeholder="https://warpcast.com/username/0x..."
-            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${
-              errors.parentCastUrl ? "border-red-500" : "border-gray-200"
+            className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 text-base ${
+              errors.parentCastUrl ? "border-red-500 focus:ring-red-500" : "border-gray-200 focus:shadow-glow-orange"
             }`}
             disabled={isLoading}
           />
@@ -436,7 +436,7 @@ export default function EntryForm() {
         <button
           type="submit"
           disabled={isLoading || !isConnected}
-          className="w-full px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold text-lg rounded-xl shadow-lg hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 min-h-[56px]"
+          className="w-full px-4 sm:px-6 py-3.5 sm:py-4 bg-gradient-primary text-white font-bold text-base sm:text-lg rounded-xl shadow-lg hover:shadow-glow-orange active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 min-h-[48px] sm:min-h-[56px]"
         >
           {isLoading ? (
             <>

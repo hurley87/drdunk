@@ -9,9 +9,9 @@ export default function ProfileHeader() {
 
   if (!user || !user.data) {
     return (
-      <div className="flex items-center gap-2 px-4 py-3">
-        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-          <User className="w-5 h-5 text-gray-500" />
+      <div className="flex items-center gap-2 px-4 py-2.5 safe-area-inset-top">
+        <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center">
+          <User className="w-4 h-4 text-gray-500" />
         </div>
       </div>
     );
@@ -20,25 +20,25 @@ export default function ProfileHeader() {
   const userData = user.data;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
+    <div className="flex items-center gap-2.5 px-4 py-2.5 safe-area-inset-top">
       {userData.pfp_url ? (
         <Image
           src={userData.pfp_url}
           alt={userData.display_name || userData.username}
-          width={40}
-          height={40}
-          className="rounded-full border-2 border-orange-500"
+          width={36}
+          height={36}
+          className="rounded-full border-2 border-primary-500 shadow-soft"
         />
       ) : (
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
-          <User className="w-5 h-5 text-white" />
+        <div className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center shadow-soft">
+          <User className="w-4 h-4 text-white" />
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-900 truncate">
+        <p className="text-sm font-semibold text-gray-900 truncate leading-tight">
           {userData.display_name || userData.username}
         </p>
-        <p className="text-xs text-gray-500">@{userData.username}</p>
+        <p className="text-[11px] text-gray-500 truncate leading-tight">@{userData.username}</p>
       </div>
     </div>
   );

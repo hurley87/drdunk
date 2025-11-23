@@ -9,66 +9,67 @@ export const metadata: Metadata = {
 
 export default function CreateDunkPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 pb-20">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-              <Sparkles className="w-7 h-7" />
+      <div className="bg-gradient-primary text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/20 to-accent-600/20"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10">
+          <div className="flex items-center gap-2.5 sm:gap-3 mb-3 sm:mb-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center shadow-glow-pink animate-float">
+              <Sparkles className="w-5 h-5 sm:w-7 sm:h-7 drop-shadow-lg" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Create Your Dunk</h1>
-              <p className="text-orange-100">Submit your entry to compete</p>
+              <h1 className="text-2xl sm:text-3xl font-bold drop-shadow-md">Create Your Dunk</h1>
+              <p className="text-xs sm:text-sm text-white/90">Submit your entry to compete</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Entry Form Card */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+        <div className="card shadow-soft-lg">
           <EntryForm />
         </div>
 
         {/* Tips Card */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
+        <div className="card-gradient border-secondary-200">
+          <h2 className="text-lg sm:text-xl font-bold bg-gradient-secondary bg-clip-text text-transparent mb-4 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-secondary-600" />
             Pro Tips for Winning
           </h2>
           <div className="space-y-3">
             <div className="flex gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
-              <p className="text-sm text-gray-700">
-                <strong>Timing matters:</strong> Post during peak hours for maximum visibility
+              <div className="w-2.5 h-2.5 rounded-full bg-gradient-secondary mt-1.5 flex-shrink-0 shadow-sm" />
+              <p className="text-sm text-gray-700 leading-relaxed">
+                <strong className="text-secondary-700">Timing matters:</strong> Post during peak hours for maximum visibility
               </p>
             </div>
             <div className="flex gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
-              <p className="text-sm text-gray-700">
-                <strong>Be creative:</strong> Unique and funny dunks get more engagement
+              <div className="w-2.5 h-2.5 rounded-full bg-gradient-accent mt-1.5 flex-shrink-0 shadow-sm" />
+              <p className="text-sm text-gray-700 leading-relaxed">
+                <strong className="text-accent-700">Be creative:</strong> Unique and funny dunks get more engagement
               </p>
             </div>
             <div className="flex gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
-              <p className="text-sm text-gray-700">
-                <strong>Engage back:</strong> Reply to comments to boost your engagement score
+              <div className="w-2.5 h-2.5 rounded-full bg-gradient-primary mt-1.5 flex-shrink-0 shadow-sm" />
+              <p className="text-sm text-gray-700 leading-relaxed">
+                <strong className="text-primary-700">Engage back:</strong> Reply to comments to boost your engagement score
               </p>
             </div>
             <div className="flex gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
-              <p className="text-sm text-gray-700">
-                <strong>Share widely:</strong> Promote your dunk in relevant channels
+              <div className="w-2.5 h-2.5 rounded-full bg-gradient-secondary mt-1.5 flex-shrink-0 shadow-sm" />
+              <p className="text-sm text-gray-700 leading-relaxed">
+                <strong className="text-secondary-700">Share widely:</strong> Promote your dunk in relevant channels
               </p>
             </div>
           </div>
         </div>
 
         {/* Scoring Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Engagement Scoring</h2>
+        <div className="card">
+          <h2 className="text-lg sm:text-xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">Engagement Scoring</h2>
           <div className="space-y-3">
             <div className="flex items-center justify-between py-2 border-b border-gray-100">
               <span className="text-sm text-gray-700">👍 Likes</span>
@@ -83,17 +84,17 @@ export default function CreateDunkPage() {
               <span className="text-sm font-bold text-gray-900">3 points each</span>
             </div>
           </div>
-          <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
-            <p className="text-xs text-orange-800">
+          <div className="mt-4 p-3 bg-gradient-primary/10 rounded-lg border border-primary-200">
+            <p className="text-xs text-primary-800 font-medium">
               <strong>Formula:</strong> Score = (Likes × 1) + (Recasts × 2) + (Replies × 3)
             </p>
           </div>
         </div>
 
         {/* Important Info */}
-        <div className="bg-amber-50 rounded-xl border border-amber-200 p-6">
-          <h3 className="text-sm font-bold text-amber-900 mb-3 flex items-center gap-2">
-            <Clock className="w-4 h-4" />
+        <div className="bg-gradient-to-br from-primary-50 to-accent-50 rounded-xl border border-primary-200 p-4 sm:p-6 shadow-soft">
+          <h3 className="text-sm font-bold bg-gradient-primary bg-clip-text text-transparent mb-3 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-primary-600" />
             Important Information
           </h3>
           <ul className="space-y-2 text-xs text-amber-800">

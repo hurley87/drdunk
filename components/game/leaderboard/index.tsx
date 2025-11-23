@@ -73,11 +73,11 @@ export default function Leaderboard() {
 
   return (
     <div className="w-full">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Today&apos;s Leaderboard</h2>
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">Today&apos;s Leaderboard</h2>
         {timeRemaining && (
-          <p className="text-sm text-gray-600 mt-1">
-            Round ends in: <span className="font-semibold text-orange-600">{timeRemaining}</span>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
+            Round ends in: <span className="font-semibold bg-gradient-accent bg-clip-text text-transparent">{timeRemaining}</span>
           </p>
         )}
       </div>
@@ -93,7 +93,7 @@ export default function Leaderboard() {
           <p className="text-sm text-gray-500">Be the first to enter and claim the pot!</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {leaderboard.map((entry, index) => {
             const isWinning = entry.rank === 1;
             const isTop3 = entry.rank <= 3;
@@ -101,40 +101,40 @@ export default function Leaderboard() {
             return (
               <div
                 key={entry.castHash}
-                className={`p-4 rounded-xl border-2 transition-all ${
+                className={`p-3 sm:p-4 rounded-xl border-2 transition-all active:scale-[0.98] ${
                   isWinning
-                    ? "bg-gradient-to-br from-yellow-50 to-orange-50 border-orange-300 shadow-md"
+                    ? "bg-gradient-to-br from-primary-50 to-accent-50 border-primary-300 shadow-glow-orange"
                     : isTop3
-                    ? "bg-gradient-to-br from-blue-50 to-purple-50 border-purple-200"
-                    : "bg-white border-gray-200 hover:border-gray-300"
+                    ? "bg-gradient-to-br from-secondary-50 to-primary-50 border-secondary-200 shadow-soft"
+                    : "bg-white border-gray-200 active:border-primary-200 shadow-soft"
                 }`}
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-2 sm:gap-3">
                   {/* Rank Badge */}
-                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                  <div className={`flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm ${
                     isWinning
-                      ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg"
+                      ? "bg-gradient-primary text-white shadow-glow-orange"
                       : isTop3
-                      ? "bg-gradient-to-br from-blue-400 to-purple-500 text-white"
-                      : "bg-gray-100 text-gray-600"
+                      ? "bg-gradient-secondary text-white shadow-glow-purple"
+                      : "bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 border border-gray-200"
                   }`}>
                     {isWinning ? "👑" : `#${entry.rank}`}
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-medium text-gray-500">FID {entry.fid}</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2 flex-wrap">
+                      <span className="text-[10px] sm:text-xs font-medium text-gray-500">FID {entry.fid}</span>
                       {isWinning && (
-                        <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">
-                          Leading!
+                        <span className="badge badge-primary text-[10px] sm:text-xs">
+                          Leading! 👑
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-800 mb-3 line-clamp-3">{entry.dunkText}</p>
+                    <p className="text-xs sm:text-sm text-gray-800 mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-3">{entry.dunkText}</p>
                     
                     {/* Stats */}
-                    <div className="flex items-center gap-4 text-xs">
+                    <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs flex-wrap">
                       <span className="flex items-center gap-1 text-gray-600">
                         <span className="font-semibold text-gray-900">{entry.likes}</span> 👍
                       </span>
@@ -144,7 +144,7 @@ export default function Leaderboard() {
                       <span className="flex items-center gap-1 text-gray-600">
                         <span className="font-semibold text-gray-900">{entry.replies}</span> 💬
                       </span>
-                      <span className="flex items-center gap-1 font-bold text-orange-600 ml-auto">
+                      <span className="flex items-center gap-1 font-bold bg-gradient-primary bg-clip-text text-transparent ml-auto">
                         {entry.engagementScore.toFixed(0)} pts
                       </span>
                     </div>
@@ -156,10 +156,10 @@ export default function Leaderboard() {
                       href={entry.castUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`flex-shrink-0 px-3 py-2 text-xs font-medium rounded-lg transition-colors ${
+                      className={`flex-shrink-0 px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-medium rounded-lg transition-all active:scale-95 min-h-[32px] flex items-center ${
                         isWinning
-                          ? "bg-orange-600 text-white hover:bg-orange-700"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          ? "bg-gradient-primary text-white shadow-glow-orange active:shadow-none"
+                          : "bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 border border-gray-200 active:bg-gray-200"
                       }`}
                     >
                       View

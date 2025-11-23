@@ -77,39 +77,39 @@ export default function RoundStatus() {
   const hasEntered = !!userEntry?.data;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h3 className="text-lg font-bold text-gray-900 mb-4">Round Status</h3>
+    <div className="card">
+      <h3 className="text-base sm:text-lg font-bold bg-gradient-primary bg-clip-text text-transparent mb-3 sm:mb-4">Round Status</h3>
       
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200">
-          <p className="text-xs text-orange-700 mb-1">Pot Size</p>
-          <p className="text-xl font-bold text-orange-600">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-3 sm:mb-4">
+        <div className="text-center p-2.5 sm:p-4 bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl border border-primary-200 shadow-soft hover:shadow-glow-orange transition-all duration-200">
+          <p className="text-[10px] sm:text-xs text-primary-700 mb-0.5 sm:mb-1 font-semibold">Pot Size</p>
+          <p className="text-base sm:text-xl font-bold text-primary-600">
             {potAmount.toFixed(1)}
           </p>
-          <p className="text-xs text-orange-600">USDC</p>
+          <p className="text-[10px] sm:text-xs text-primary-600">USDC</p>
         </div>
 
-        <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-          <p className="text-xs text-blue-700 mb-1">Entries</p>
-          <p className="text-xl font-bold text-blue-600">{entryCount}</p>
-          <p className="text-xs text-blue-600">Players</p>
+        <div className="text-center p-2.5 sm:p-4 bg-gradient-to-br from-secondary-50 to-secondary-100 rounded-xl border border-secondary-200 shadow-soft hover:shadow-glow-purple transition-all duration-200">
+          <p className="text-[10px] sm:text-xs text-secondary-700 mb-0.5 sm:mb-1 font-semibold">Entries</p>
+          <p className="text-base sm:text-xl font-bold text-secondary-600">{entryCount}</p>
+          <p className="text-[10px] sm:text-xs text-secondary-600">Players</p>
         </div>
 
-        <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-          <p className="text-xs text-purple-700 mb-1">Time Left</p>
-          <p className="text-sm font-bold text-purple-600">{timeRemaining}</p>
+        <div className="text-center p-2.5 sm:p-4 bg-gradient-to-br from-accent-50 to-accent-100 rounded-xl border border-accent-200 shadow-soft hover:shadow-glow-pink transition-all duration-200">
+          <p className="text-[10px] sm:text-xs text-accent-700 mb-0.5 sm:mb-1 font-semibold">Time Left</p>
+          <p className="text-xs sm:text-sm font-bold text-accent-600">{timeRemaining}</p>
         </div>
       </div>
 
       {hasEntered && (
-        <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+        <div className="p-3 bg-gradient-to-r from-primary-50 to-accent-50 border border-primary-200 rounded-xl flex items-center gap-2 shadow-soft">
+          <div className="w-5 h-5 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-glow-orange">
             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <p className="text-sm text-green-800 font-medium">
-            You&apos;re in! Good luck!
+          <p className="text-sm text-primary-800 font-semibold">
+            You&apos;re in! Good luck! 🎯
           </p>
         </div>
       )}
