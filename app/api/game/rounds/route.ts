@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getCurrentRoundId } from "@/lib/game-utils";
 
 export async function GET(request: NextRequest) {
@@ -7,6 +7,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const roundIdParam = searchParams.get("roundId");
     const currentOnly = searchParams.get("current") === "true";
+
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json(
+        {
+          error: "Service unavailable",
+          message: "Database is not configured. Please contact support.",
+        },
+        { status: 503 }
+      );
+    }
 
     if (currentOnly) {
       // Get current round

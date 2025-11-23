@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getCurrentRoundId } from "@/lib/game-utils";
 import { createPublicClient, createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -38,6 +38,13 @@ const DOCTOR_DUNK_ABI = [
 export async function calculateDailyWinner() {
   try {
     console.log("[daily-winner] Starting daily winner calculation...");
+
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      const error = new Error("Database is not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY in your environment variables.");
+      console.error("[daily-winner] Supabase not configured:", error.message);
+      throw error;
+    }
 
     // Get the previous round (yesterday)
     const currentRoundId = getCurrentRoundId();

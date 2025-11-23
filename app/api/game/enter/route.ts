@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { validateQuickAuth } from "@/lib/quick-auth";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getCurrentRoundId } from "@/lib/game-utils";
 import { postDunkCast } from "@/lib/webhook/neynar";
 import { env } from "@/lib/env";
@@ -47,6 +47,17 @@ export async function POST(request: NextRequest) {
     }
 
     const { dunkText, parentCastUrl, paymentTxHash } = validationResult.data;
+
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json(
+        {
+          error: "Service unavailable",
+          message: "Database is not configured. Please contact support.",
+        },
+        { status: 503 }
+      );
+    }
 
     // Get current round ID
     const roundId = getCurrentRoundId();

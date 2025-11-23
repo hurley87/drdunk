@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateQuickAuth } from "@/lib/quick-auth";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { createPublicClient, http, parseEther } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import { env } from "@/lib/env";
@@ -55,6 +55,17 @@ export async function POST(request: NextRequest) {
           error: "Round ID required",
         },
         { status: 400 }
+      );
+    }
+
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json(
+        {
+          error: "Service unavailable",
+          message: "Database is not configured. Please contact support.",
+        },
+        { status: 503 }
       );
     }
 

@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { env } from "@/lib/env";
 import { calculateWeightedScore, getCurrentRoundId } from "@/lib/game-utils";
 import { createPublicClient, createWalletClient, http } from "viem";
@@ -64,6 +64,13 @@ async function fetchCastEngagement(castHash: string) {
 export async function updateEngagementMetrics() {
   try {
     console.log("[engagement-tracker] Starting engagement update...");
+
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      const error = new Error("Database is not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY in your environment variables.");
+      console.error("[engagement-tracker] Supabase not configured:", error.message);
+      throw error;
+    }
 
     // Get all active entries from current and recent rounds
     const currentRoundId = getCurrentRoundId();

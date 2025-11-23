@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateQuickAuth } from "@/lib/quick-auth";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,6 +13,17 @@ export async function GET(request: NextRequest) {
           error: "Authentication required",
         },
         { status: 401 }
+      );
+    }
+
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json(
+        {
+          error: "Service unavailable",
+          message: "Database is not configured. Please contact support.",
+        },
+        { status: 503 }
       );
     }
 
