@@ -314,51 +314,58 @@ export default function EntryForm() {
   const hasAllowance = allowance && allowance >= ENTRY_FEE;
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4">
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="w-full">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label
             htmlFor="dunkText"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="block text-sm font-semibold text-gray-900 mb-2"
           >
-            Your Dunk
+            Your Dunk 🔥
           </label>
           <textarea
             id="dunkText"
             value={dunkText}
             onChange={(e) => setDunkText(e.target.value)}
-            placeholder="Enter your dunk here..."
-            rows={6}
-            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none ${
-              errors.dunkText ? "border-red-500" : "border-gray-300"
+            placeholder="Write something fire... make them laugh, make them think, or make them react! 🎯"
+            rows={5}
+            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none transition-colors ${
+              errors.dunkText ? "border-red-500" : "border-gray-200"
             }`}
             disabled={isLoading}
           />
-          {errors.dunkText && (
-            <p className="mt-1 text-sm text-red-600">{errors.dunkText}</p>
-          )}
+          <div className="flex items-center justify-between mt-1">
+            {errors.dunkText ? (
+              <p className="text-sm text-red-600">{errors.dunkText}</p>
+            ) : (
+              <p className="text-xs text-gray-500">Max engagement = Max chance to win!</p>
+            )}
+            <p className="text-xs text-gray-400">{dunkText.length} chars</p>
+          </div>
         </div>
 
         <div>
           <label
             htmlFor="parentCastUrl"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="block text-sm font-semibold text-gray-900 mb-2"
           >
-            Reply to Cast (Optional)
+            Reply to Cast (Optional) 💬
           </label>
           <input
             id="parentCastUrl"
             type="url"
             value={parentCastUrl}
             onChange={(e) => setParentCastUrl(e.target.value)}
-            placeholder="https://warpcast.com/..."
-            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-              errors.parentCastUrl ? "border-red-500" : "border-gray-300"
+            placeholder="https://warpcast.com/username/0x..."
+            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${
+              errors.parentCastUrl ? "border-red-500" : "border-gray-200"
             }`}
             disabled={isLoading}
           />
-          {errors.parentCastUrl && (
+          {errors.parentCastUrl ? (
             <p className="mt-1 text-sm text-red-600">{errors.parentCastUrl}</p>
+          ) : (
+            <p className="mt-1 text-xs text-gray-500">Make your dunk a reply to boost visibility</p>
           )}
         </div>
 
@@ -429,25 +436,31 @@ export default function EntryForm() {
         <button
           type="submit"
           disabled={isLoading || !isConnected}
-          className="w-full px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center space-x-2 min-h-[48px]"
+          className="w-full px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold text-lg rounded-xl shadow-lg hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 min-h-[56px]"
         >
           {isLoading ? (
             <>
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
               <span>
                 {step === "approve"
-                  ? "Approving..."
+                  ? "Approving USDC..."
                   : step === "pay"
-                  ? "Paying..."
+                  ? "Processing Payment..."
                   : step === "submit"
-                  ? "Submitting..."
+                  ? "Submitting Entry..."
                   : "Processing..."}
               </span>
             </>
           ) : !hasAllowance ? (
-            "Approve & Enter Game"
+            <>
+              <span>🚀</span>
+              <span>Approve & Enter Game</span>
+            </>
           ) : (
-            `Enter Game (${isLoadingEntryFee ? "..." : `${parseFloat(ENTRY_FEE.toString()) / 1e6} USDC`})`
+            <>
+              <span>🎯</span>
+              <span>Enter Game ({isLoadingEntryFee ? "..." : `${parseFloat(ENTRY_FEE.toString()) / 1e6} USDC`})</span>
+            </>
           )}
         </button>
       </form>

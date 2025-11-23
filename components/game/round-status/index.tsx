@@ -77,37 +77,42 @@ export default function RoundStatus() {
   const hasEntered = !!userEntry?.data;
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4">
-      <div className="p-6 bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
-        <h3 className="text-xl font-bold mb-4">Current Round</h3>
-        
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Pot Size:</span>
-            <span className="text-2xl font-bold text-purple-600">
-              {potAmount.toFixed(1)} USDC
-            </span>
-          </div>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h3 className="text-lg font-bold text-gray-900 mb-4">Round Status</h3>
+      
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200">
+          <p className="text-xs text-orange-700 mb-1">Pot Size</p>
+          <p className="text-xl font-bold text-orange-600">
+            {potAmount.toFixed(1)}
+          </p>
+          <p className="text-xs text-orange-600">USDC</p>
+        </div>
 
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Entries:</span>
-            <span className="text-xl font-semibold">{entryCount}</span>
-          </div>
+        <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+          <p className="text-xs text-blue-700 mb-1">Entries</p>
+          <p className="text-xl font-bold text-blue-600">{entryCount}</p>
+          <p className="text-xs text-blue-600">Players</p>
+        </div>
 
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Time Remaining:</span>
-            <span className="text-lg font-semibold">{timeRemaining}</span>
-          </div>
-
-          {hasEntered && (
-            <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded-lg">
-              <p className="text-sm text-green-800 font-medium">
-                ✓ You&apos;ve entered this round!
-              </p>
-            </div>
-          )}
+        <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+          <p className="text-xs text-purple-700 mb-1">Time Left</p>
+          <p className="text-sm font-bold text-purple-600">{timeRemaining}</p>
         </div>
       </div>
+
+      {hasEntered && (
+        <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+          <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p className="text-sm text-green-800 font-medium">
+            You&apos;re in! Good luck!
+          </p>
+        </div>
+      )}
     </div>
   );
 }
