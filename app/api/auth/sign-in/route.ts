@@ -25,7 +25,9 @@ export const POST = async (req: NextRequest) => {
     isValidSignature = !!payload;
     fid = Number(payload.sub);
     walletAddress = (payload as any).address as `0x${string}` || zeroAddress;
-    expirationTime = payload.exp ?? Date.now() + 7 * 24 * 60 * 60 * 1000;
+    // JWT exp claim is in Unix seconds, but fallback was in milliseconds
+    // Convert fallback to seconds to match jose.setExpirationTime() expectation
+    expirationTime = payload.exp ?? Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000);
   } catch (e) {
     if (e instanceof Errors.InvalidTokenError) {
       console.error("Invalid token", e);

@@ -5,8 +5,9 @@ import { supabase } from "@/lib/supabase";
 import { getCurrentRoundId } from "@/lib/game-utils";
 import { postDunkCast } from "@/lib/webhook/neynar";
 import { env } from "@/lib/env";
-import { createPublicClient, http, decodeFunctionData } from "viem";
+import { createPublicClient, createWalletClient, http, decodeFunctionData } from "viem";
 import { base, baseSepolia } from "viem/chains";
+import { privateKeyToAccount } from "viem/accounts";
 
 const enterGameSchema = z.object({
   dunkText: z.string().min(1, "Dunk text cannot be empty"),
@@ -239,62 +240,10 @@ export async function POST(request: NextRequest) {
       round = newRound;
     }
 
-    // Post cast to Farcaster
-    let castHash: string;
-    let castUrl: string;
-
-    try {
-      const castResponse = await postDunkCast(dunkText, parentCastUrl);
-      // Handle both response formats
-      castHash = castResponse.cast?.hash || castResponse.result?.cast?.hash || "";
-      const authorFid = castResponse.cast?.author?.fid || castResponse.result?.cast?.author?.fid;
-      castUrl = castHash && authorFid 
-        ? `https://warpcast.com/${authorFid}/${castHash}`
-        : "";
-    } catch (error) {
-      console.error("[game/enter] Failed to post cast:", error);
-      return NextResponse.json(
-        {
-          error: "Failed to post cast",
-          message: error instanceof Error ? error.message : "Unknown error",
-        },
-        { status: 500 }
-      );
-    }
-
-    if (!castHash) {
-      return NextResponse.json(
-        {
-          error: "Invalid cast response",
-          message: "Failed to get cast hash from Neynar",
-        },
-        { status: 500 }
-      );
-    }
-
-    // Check if cast hash already exists in this round
-    const { data: existingCast, error: existingCastError } = await supabase
-      .from("game_entries")
-      .select("id")
-      .eq("round_id", roundId)
-      .eq("cast_hash", castHash)
-      .single();
-
-    // PGRST116 is "not found" error - this is expected if cast hash is new
-    if (existingCastError && existingCastError.code !== "PGRST116") {
-      throw existingCastError;
-    }
-
-    if (existingCast) {
-      return NextResponse.json(
-        {
-          error: "Cast hash already used",
-          message: "This cast has already been submitted",
-        },
-        { status: 400 }
-      );
-    }
-
+    // IMPORTANT: Do database operations BEFORE posting cast to Farcaster
+    // This prevents orphaned casts if database operations fail
+    // Use tempCastHash for initial entry creation, then update with real castHash after posting
+    
     // Update round pot amount atomically FIRST
     // Pot contribution is calculated dynamically from contract's ENTRY_FEE (90% goes to pot, 10% is fee)
     // This ensures database stays in sync even if ENTRY_FEE is changed via setEntryFee()
@@ -320,16 +269,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create entry AFTER pot update succeeds
-    // If entry creation fails, we need to rollback the pot increment to maintain consistency
+    // Create entry with tempCastHash FIRST (before posting cast)
+    // This ensures database operations succeed before we post to Farcaster
+    // We'll update the cast_hash after posting the cast successfully
+    const initialCastHash = tempCastHash || `temp-${Date.now()}-${fid}`;
     const { data: entry, error: entryError } = await supabase
       .from("game_entries")
       .insert({
         round_id: roundId,
         fid,
         wallet_address: walletAddress,
-        cast_hash: castHash,
-        cast_url: castUrl,
+        cast_hash: initialCastHash,
+        cast_url: "", // Will be updated after cast is posted
         dunk_text: dunkText,
         payment_tx_hash: paymentTxHash,
         engagement_score: 0,
@@ -363,6 +314,116 @@ export async function POST(request: NextRequest) {
         },
         { status: 500 }
       );
+    }
+
+    // NOW post cast to Farcaster (after database operations succeed)
+    // This prevents orphaned casts if database operations fail
+    let castHash: string;
+    let castUrl: string;
+
+    try {
+      const castResponse = await postDunkCast(dunkText, parentCastUrl);
+      // Handle both response formats
+      castHash = castResponse.cast?.hash || castResponse.result?.cast?.hash || "";
+      const authorFid = castResponse.cast?.author?.fid || castResponse.result?.cast?.author?.fid;
+      castUrl = castHash && authorFid 
+        ? `https://warpcast.com/${authorFid}/${castHash}`
+        : "";
+    } catch (error) {
+      console.error("[game/enter] Failed to post cast:", error);
+      // Rollback database operations since cast posting failed
+      try {
+        // Delete the entry
+        await supabase.from("game_entries").delete().eq("id", entry.id);
+        // Rollback pot increment
+        await supabase.rpc("increment_pot_amount", {
+          round_id: roundId,
+          amount: -potContribution,
+        });
+        console.log(`[game/enter] Rolled back entry and pot increment due to cast posting failure`);
+      } catch (rollbackError) {
+        console.error("[game/enter] Failed to rollback after cast posting failure:", rollbackError);
+      }
+      
+      return NextResponse.json(
+        {
+          error: "Failed to post cast",
+          message: error instanceof Error ? error.message : "Unknown error",
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!castHash) {
+      // Rollback database operations since cast posting failed
+      try {
+        await supabase.from("game_entries").delete().eq("id", entry.id);
+        await supabase.rpc("increment_pot_amount", {
+          round_id: roundId,
+          amount: -potContribution,
+        });
+        console.log(`[game/enter] Rolled back entry and pot increment due to invalid cast response`);
+      } catch (rollbackError) {
+        console.error("[game/enter] Failed to rollback after invalid cast response:", rollbackError);
+      }
+      
+      return NextResponse.json(
+        {
+          error: "Invalid cast response",
+          message: "Failed to get cast hash from Neynar",
+        },
+        { status: 500 }
+      );
+    }
+
+    // Check if cast hash already exists in this round (shouldn't happen, but check anyway)
+    const { data: existingCast, error: existingCastError } = await supabase
+      .from("game_entries")
+      .select("id")
+      .eq("round_id", roundId)
+      .eq("cast_hash", castHash)
+      .single();
+
+    // PGRST116 is "not found" error - this is expected if cast hash is new
+    if (existingCastError && existingCastError.code !== "PGRST116") {
+      throw existingCastError;
+    }
+
+    if (existingCast && existingCast.id !== entry.id) {
+      // Rollback database operations since cast hash already exists
+      try {
+        await supabase.from("game_entries").delete().eq("id", entry.id);
+        await supabase.rpc("increment_pot_amount", {
+          round_id: roundId,
+          amount: -potContribution,
+        });
+        console.log(`[game/enter] Rolled back entry and pot increment - cast hash already exists`);
+      } catch (rollbackError) {
+        console.error("[game/enter] Failed to rollback after duplicate cast hash:", rollbackError);
+      }
+      
+      return NextResponse.json(
+        {
+          error: "Cast hash already used",
+          message: "This cast has already been submitted",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Update entry with real cast hash and cast URL
+    const { error: updateError } = await supabase
+      .from("game_entries")
+      .update({
+        cast_hash: castHash,
+        cast_url: castUrl,
+      })
+      .eq("id", entry.id);
+
+    if (updateError) {
+      console.error("[game/enter] Failed to update entry with real cast hash:", updateError);
+      // Don't rollback - cast is already posted, entry exists, just log the error
+      // The entry will have the temp cast hash, which can be updated manually if needed
     }
 
     // Update contract's cast hash mapping from temporary hash to real hash

@@ -110,10 +110,19 @@ export async function POST(request: NextRequest) {
 
     let updated = 0;
     const updates = [];
+    // Cache engagement data to avoid duplicate API calls
+    const engagementCache = new Map<string, Awaited<ReturnType<typeof fetchCastEngagement>>>();
 
-    // Fetch engagement for each entry
+    // Fetch engagement for each entry and cache it
     for (const entry of entries) {
-      const engagement = await fetchCastEngagement(entry.cast_hash);
+      // Check cache first, then fetch if not cached
+      let engagement = engagementCache.get(entry.cast_hash);
+      if (!engagement) {
+        engagement = await fetchCastEngagement(entry.cast_hash);
+        if (engagement) {
+          engagementCache.set(entry.cast_hash, engagement);
+        }
+      }
       
       if (!engagement) {
         continue;
@@ -178,9 +187,10 @@ export async function POST(request: NextRequest) {
 
         console.log(`[game/engagement] Syncing engagement to contract ${contractAddress}...`);
 
-        // Sync each entry's engagement to the contract
+        // Sync each entry's engagement to the contract using cached data
         for (const entry of entries) {
-          const engagement = await fetchCastEngagement(entry.cast_hash);
+          // Reuse cached engagement data instead of fetching again
+          const engagement = engagementCache.get(entry.cast_hash);
           if (!engagement) continue;
 
           try {

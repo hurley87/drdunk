@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from("dunks")
       .insert({
+        fid,
         cast_url: castUrl,
         dunk_text: dunkText,
       })

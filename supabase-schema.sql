@@ -1,6 +1,7 @@
 -- Create dunks table
 CREATE TABLE IF NOT EXISTS dunks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  fid INTEGER NOT NULL,
   cast_url TEXT NOT NULL,
   dunk_text TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -8,6 +9,8 @@ CREATE TABLE IF NOT EXISTS dunks (
 
 -- Create index on created_at for sorting
 CREATE INDEX IF NOT EXISTS idx_dunks_created_at ON dunks(created_at DESC);
+-- Create index on fid for user lookups
+CREATE INDEX IF NOT EXISTS idx_dunks_fid ON dunks(fid);
 
 -- Enable Row Level Security (optional, for future auth)
 ALTER TABLE dunks ENABLE ROW LEVEL SECURITY;
