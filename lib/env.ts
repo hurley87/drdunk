@@ -14,9 +14,15 @@ export const env = createEnv({
     BOT_FID: z.coerce.number().int().positive(),
     SUPABASE_URL: z.string().min(1).optional(),
     SUPABASE_ANON_KEY: z.string().min(1).optional(),
+    GAME_CONTRACT_ADDRESS: z.string().min(1).optional(),
+    USDC_CONTRACT_ADDRESS: z.string().min(1).optional(),
+    CRON_SECRET: z.string().min(1).optional(),
+    CRON_WALLET_PRIVATE_KEY: z.string().min(1).optional(), // Private key for contract calls (owner wallet)
   },
   client: {
     NEXT_PUBLIC_URL: z.string().min(1),
+    NEXT_PUBLIC_GAME_CONTRACT_ADDRESS: z.string().min(1).optional(),
+    NEXT_PUBLIC_USDC_CONTRACT_ADDRESS: z.string().min(1).optional(),
     NEXT_PUBLIC_APP_ENV: z
       .enum(["development", "production"])
       .optional()
@@ -34,5 +40,7 @@ export const env = createEnv({
     NEXT_PUBLIC_FARCASTER_PAYLOAD: process.env.NEXT_PUBLIC_FARCASTER_PAYLOAD,
     NEXT_PUBLIC_FARCASTER_SIGNATURE: process.env.NEXT_PUBLIC_FARCASTER_SIGNATURE,
     NEXT_PUBLIC_BOT_FID: process.env.NEXT_PUBLIC_BOT_FID,
+    NEXT_PUBLIC_GAME_CONTRACT_ADDRESS: process.env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS,
+    NEXT_PUBLIC_USDC_CONTRACT_ADDRESS: process.env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS,
   },
 });

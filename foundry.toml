@@ -1,0 +1,6 @@
+# Foundry configuration is now in contracts/foundry.toml
+# Run forge commands from the contracts/ directory:
+# cd contracts && forge build
+# cd contracts && forge test
+# cd contracts && forge script script/DeployDoctorDunk.s.sol --rpc-url base_sepolia --broadcast
+

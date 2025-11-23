@@ -14,10 +14,18 @@ export type GiftAnalysis = {
 };
 
 export type CastReplyResponse = {
-  success: boolean;
+  success?: boolean;
   cast?: {
     hash: string;
     author: { fid: number };
     text: string;
+  };
+  // Neynar API response format
+  result?: {
+    cast: {
+      hash: string;
+      author: { fid: number };
+      text: string;
+    };
   };
 };

@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/engagement",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/daily-winner",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
+
