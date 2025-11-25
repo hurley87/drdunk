@@ -8,7 +8,13 @@ import { env } from "@/lib/env";
 // DoctorDunk contract ABI (minimal)
 const DOCTOR_DUNK_ABI = [
   {
-    inputs: [{ name: "roundId", type: "uint256" }],
+    inputs: [
+      { name: "roundId", type: "uint256" },
+      { name: "castHashes", type: "string[]" },
+      { name: "likes", type: "uint256[]" },
+      { name: "recasts", type: "uint256[]" },
+      { name: "replies", type: "uint256[]" },
+    ],
     name: "finalizeRound",
     outputs: [],
     type: "function",
@@ -155,12 +161,25 @@ export async function calculateDailyWinner() {
 
         console.log(`[daily-winner] Finalizing round ${previousRoundId} on contract ${contractAddress}...`);
 
-        // Call finalizeRound on the contract
+        // Prepare engagement data arrays for contract call
+        // Entries are already sorted by engagement_score descending, then created_at ascending
+        const castHashes = entries.map((e) => e.cast_hash);
+        const likes = entries.map((e) => BigInt(e.likes || 0));
+        const recasts = entries.map((e) => BigInt(e.recasts || 0));
+        const replies = entries.map((e) => BigInt(e.replies || 0));
+
+        // Call finalizeRound on the contract with engagement data
         const hash = await walletClient.writeContract({
           address: contractAddress as `0x${string}`,
           abi: DOCTOR_DUNK_ABI,
           functionName: "finalizeRound",
-          args: [BigInt(previousRoundId)],
+          args: [
+            BigInt(previousRoundId),
+            castHashes,
+            likes,
+            recasts,
+            replies,
+          ],
         });
 
         console.log(`[daily-winner] Transaction submitted: ${hash}`);

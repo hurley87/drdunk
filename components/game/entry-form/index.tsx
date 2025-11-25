@@ -81,8 +81,22 @@ const DOCTOR_DUNK_ABI = [
   },
   {
     inputs: [],
-    name: "ENTRY_FEE",
+    name: "entryFee",
     outputs: [{ name: "", type: "uint256" }],
+    type: "function",
+    stateMutability: "view",
+  },
+  {
+    inputs: [],
+    name: "getTokenAddress",
+    outputs: [{ name: "", type: "address" }],
+    type: "function",
+    stateMutability: "view",
+  },
+  {
+    inputs: [],
+    name: "paymentToken",
+    outputs: [{ name: "", type: "address" }],
     type: "function",
     stateMutability: "view",
   },
@@ -120,11 +134,11 @@ export default function EntryForm() {
     ? (env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS as Address)
     : undefined;
 
-  // Dynamically fetch ENTRY_FEE from contract
+  // Dynamically fetch entryFee from contract
   const { data: contractEntryFee, isLoading: isLoadingEntryFee } = useReadContract({
     address: gameContractAddress,
     abi: DOCTOR_DUNK_ABI,
-    functionName: "ENTRY_FEE",
+    functionName: "entryFee",
     query: {
       enabled: !!gameContractAddress,
     },

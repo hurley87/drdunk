@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
             },
             {
               inputs: [],
-              name: "ENTRY_FEE",
+              name: "entryFee",
               outputs: [{ name: "", type: "uint256" }],
               type: "function",
               stateMutability: "view",
@@ -168,20 +168,20 @@ export async function POST(request: NextRequest) {
             tempCastHash = decoded.args[0] as string;
           }
 
-          // Read ENTRY_FEE from contract to calculate actual pot contribution
+          // Read entryFee from contract to calculate actual pot contribution
           try {
             const entryFee = await client.readContract({
               address: contractAddress as `0x${string}`,
               abi: DOCTOR_DUNK_ABI,
-              functionName: "ENTRY_FEE",
+              functionName: "entryFee",
             });
 
-            // Calculate pot contribution: ENTRY_FEE * 90 / 100 (90% goes to pot, 10% is fee)
-            // ENTRY_FEE is in smallest unit (e.g., 1e6 for 1 USDC with 6 decimals)
+            // Calculate pot contribution: entryFee * 90 / 100 (90% goes to pot, 10% is fee)
+            // entryFee is in smallest unit (e.g., 1e6 for 1 USDC with 6 decimals)
             const entryFeeNumber = Number(entryFee);
             potContribution = (entryFeeNumber * 90) / 100 / 1e6; // Convert from smallest unit to USDC
           } catch (feeError) {
-            console.warn("[game/enter] Failed to read ENTRY_FEE from contract, using default 0.9:", feeError);
+            console.warn("[game/enter] Failed to read entryFee from contract, using default 0.9:", feeError);
             // Continue with default 0.9 if contract read fails
           }
         } catch (decodeError) {
@@ -256,8 +256,8 @@ export async function POST(request: NextRequest) {
     // Use tempCastHash for initial entry creation, then update with real castHash after posting
     
     // Update round pot amount atomically FIRST
-    // Pot contribution is calculated dynamically from contract's ENTRY_FEE (90% goes to pot, 10% is fee)
-    // This ensures database stays in sync even if ENTRY_FEE is changed via setEntryFee()
+    // Pot contribution is calculated dynamically from contract's entryFee (90% goes to pot, 10% is fee)
+    // This ensures database stays in sync even if entryFee is changed via setEntryFee()
     // Use atomic increment via RPC function to prevent race conditions with concurrent requests
     // IMPORTANT: Update pot BEFORE creating entry to maintain atomicity - if entry creation fails,
     // we can rollback the pot increment. If we create entry first and pot update fails, we have
@@ -284,7 +284,7 @@ export async function POST(request: NextRequest) {
     // This ensures database operations succeed before we post to Farcaster
     // We'll update the cast_hash after posting the cast successfully
     const initialCastHash = tempCastHash || `temp-${Date.now()}-${fid}`;
-    const { data: entry, error: entryError } = await supabase
+    let { data: entry, error: entryError } = await supabase
       .from("game_entries")
       .insert({
         round_id: roundId,
@@ -423,18 +423,87 @@ export async function POST(request: NextRequest) {
     }
 
     // Update entry with real cast hash and cast URL
-    const { error: updateError } = await supabase
-      .from("game_entries")
-      .update({
-        cast_hash: castHash,
-        cast_url: castUrl,
-      })
-      .eq("id", entry.id);
+    // Retry up to 3 times to handle transient database errors
+    let updateError = null;
+    let retries = 3;
+    let updateSucceeded = false;
+    
+    while (retries > 0 && !updateSucceeded) {
+      const { error, data } = await supabase
+        .from("game_entries")
+        .update({
+          cast_hash: castHash,
+          cast_url: castUrl,
+        })
+        .eq("id", entry.id)
+        .select()
+        .single();
+      
+      if (error) {
+        updateError = error;
+        retries--;
+        if (retries > 0) {
+          // Wait 500ms before retry (exponential backoff could be used here)
+          await new Promise(resolve => setTimeout(resolve, 500));
+          console.warn(`[game/enter] Retrying cast hash update (${retries} retries remaining)...`);
+        }
+      } else {
+        updateSucceeded = true;
+        // Update entry object with fresh data
+        if (data) {
+          entry = data;
+        }
+      }
+    }
 
-    if (updateError) {
-      console.error("[game/enter] Failed to update entry with real cast hash:", updateError);
-      // Don't rollback - cast is already posted, entry exists, just log the error
-      // The entry will have the temp cast hash, which can be updated manually if needed
+    if (!updateSucceeded && updateError) {
+      console.error("[game/enter] Failed to update entry with real cast hash after retries:", updateError);
+      
+      // Try to fetch the current entry state to verify
+      const { data: currentEntry, error: fetchError } = await supabase
+        .from("game_entries")
+        .select("*")
+        .eq("id", entry.id)
+        .single();
+      
+      if (!fetchError && currentEntry) {
+        // If entry was actually updated (race condition or eventual consistency), use it
+        if (currentEntry.cast_hash === castHash) {
+          entry = currentEntry;
+          updateSucceeded = true;
+        } else {
+          // Entry still has temp hash - return error response
+          return NextResponse.json(
+            {
+              error: "Database update failed",
+              message: "Cast was posted successfully, but failed to update database entry. Please contact support.",
+              data: {
+                castHash,
+                castUrl,
+                entryId: entry.id,
+                // Include cast info so user knows it was posted
+                castPosted: true,
+              },
+            },
+            { status: 500 }
+          );
+        }
+      } else {
+        // Couldn't verify entry state - return error
+        return NextResponse.json(
+          {
+            error: "Database update failed",
+            message: "Cast was posted successfully, but failed to update database entry. Please contact support.",
+            data: {
+              castHash,
+              castUrl,
+              entryId: entry.id,
+              castPosted: true,
+            },
+          },
+          { status: 500 }
+        );
+      }
     }
 
     // Update contract's cast hash mapping from temporary hash to real hash

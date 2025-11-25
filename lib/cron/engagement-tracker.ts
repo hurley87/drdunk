@@ -1,25 +1,6 @@
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { env } from "@/lib/env";
 import { calculateWeightedScore, getCurrentRoundId } from "@/lib/game-utils";
-import { createPublicClient, createWalletClient, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { base, baseSepolia } from "viem/chains";
-
-// DoctorDunk contract ABI for recordEngagement
-const DOCTOR_DUNK_ABI = [
-  {
-    inputs: [
-      { name: "castHash", type: "string" },
-      { name: "likes", type: "uint256" },
-      { name: "recasts", type: "uint256" },
-      { name: "replies", type: "uint256" },
-    ],
-    name: "recordEngagement",
-    outputs: [],
-    type: "function",
-    stateMutability: "nonpayable",
-  },
-] as const;
 
 /**
  * Fetch engagement metrics from Neynar API for a cast hash
@@ -146,68 +127,9 @@ export async function updateEngagementMetrics() {
     // Execute all database updates
     await Promise.all(updates);
 
-    // Sync engagement metrics to smart contract
-    const contractAddress = env.GAME_CONTRACT_ADDRESS;
-    const privateKey = env.CRON_WALLET_PRIVATE_KEY;
-
-    if (contractAddress && privateKey) {
-      try {
-        const chain = env.NEXT_PUBLIC_APP_ENV === "production" ? base : baseSepolia;
-        const publicClient = createPublicClient({
-          chain,
-          transport: http(),
-        });
-
-        const account = privateKeyToAccount(privateKey as `0x${string}`);
-        const walletClient = createWalletClient({
-          account,
-          chain,
-          transport: http(),
-        });
-
-        console.log(`[engagement-tracker] Syncing engagement to contract ${contractAddress}...`);
-
-        // Sync each entry's engagement to the contract
-        for (const entry of entries) {
-          const engagement = await fetchCastEngagement(entry.cast_hash);
-          if (!engagement) continue;
-
-          try {
-            const hash = await walletClient.writeContract({
-              address: contractAddress as `0x${string}`,
-              abi: DOCTOR_DUNK_ABI,
-              functionName: "recordEngagement",
-              args: [
-                entry.cast_hash,
-                BigInt(engagement.likes),
-                BigInt(engagement.recasts),
-                BigInt(engagement.replies),
-              ],
-            });
-
-            const receipt = await publicClient.waitForTransactionReceipt({ hash });
-            if (receipt.status === "success") {
-              console.log(`[engagement-tracker] Synced engagement for cast ${entry.cast_hash}`);
-            } else {
-              console.error(`[engagement-tracker] Failed to sync engagement for cast ${entry.cast_hash}: transaction failed`);
-            }
-          } catch (error) {
-            console.error(`[engagement-tracker] Failed to sync engagement for cast ${entry.cast_hash}:`, error);
-            // Continue with other entries even if one fails
-          }
-        }
-      } catch (error) {
-        console.error("[engagement-tracker] Failed to sync engagement to contract:", error);
-        // Don't throw - database updates succeeded, contract sync is best-effort
-      }
-    } else {
-      if (!contractAddress) {
-        console.warn("[engagement-tracker] GAME_CONTRACT_ADDRESS not set, skipping contract sync");
-      }
-      if (!privateKey) {
-        console.warn("[engagement-tracker] CRON_WALLET_PRIVATE_KEY not set, skipping contract sync");
-      }
-    }
+    // NOTE: Engagement is now stored off-chain only (in Supabase).
+    // Engagement data will be provided to finalizeRound() when finalizing each round.
+    // This saves gas costs by avoiding periodic on-chain updates during the round.
 
     console.log(`[engagement-tracker] Updated ${updated} entries`);
 
