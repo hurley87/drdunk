@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Leaderboard from "@/components/game/leaderboard";
+import { Trophy } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Daily Leaderboard - Doctor Dunk",
@@ -8,19 +9,28 @@ export const metadata: Metadata = {
 
 export default function LeaderboardPage() {
   return (
-    <div className="bg-gradient-to-b from-purple-50 to-white min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Daily Dunk Leaderboard
-          </h1>
-          <p className="text-gray-600">
-            See who&apos;s leading today&apos;s competition
-          </p>
+    <div className="min-h-screen bg-white pb-20">
+      {/* Header Section */}
+      <div className="border-b border-gray-200 bg-white">
+        <div className="max-w-3xl mx-auto px-4 py-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+              <Trophy className="w-5 h-5 text-primary-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">Daily Leaderboard</h1>
+              <p className="text-sm text-gray-500">See who&apos;s leading today&apos;s competition</p>
+            </div>
+          </div>
         </div>
-        <Leaderboard />
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        <div className="card">
+          <Leaderboard />
+        </div>
       </div>
     </div>
   );
 }
-

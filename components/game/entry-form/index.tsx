@@ -6,8 +6,12 @@ import { useApiMutation } from "@/hooks/use-api-mutation";
 import { useUser } from "@/contexts/user-context";
 import { z } from "zod";
 import { parseUnits, Address } from "viem";
-import { base, baseSepolia } from "viem/chains";
+import { base } from "viem/chains";
 import { env } from "@/lib/env";
+import { ConfirmationDialog } from "./confirmation-dialog";
+import { TransactionStatus } from "@/components/ui/transaction-status";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 const dunkSchema = z.object({
   dunkText: z.string().min(1, "Dunk text cannot be empty"),
@@ -116,7 +120,8 @@ export default function EntryForm() {
     payment?: string;
   }>({});
   const [successMessage, setSuccessMessage] = useState("");
-  const [step, setStep] = useState<"form" | "approve" | "pay" | "submit">("form");
+  const [step, setStep] = useState<"form" | "approve" | "pay" | "submit" | "success">("form");
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   // Get USDC contract address based on chain or env
   const usdcAddress = (() => {
@@ -146,6 +151,9 @@ export default function EntryForm() {
 
   // Use contract ENTRY_FEE if available, otherwise use default
   const ENTRY_FEE = contractEntryFee !== undefined ? contractEntryFee : DEFAULT_ENTRY_FEE;
+  const entryFeeFormatted = (parseFloat(ENTRY_FEE.toString()) / 1e6).toFixed(2);
+  const platformFeeFormatted = ((parseFloat(ENTRY_FEE.toString()) / 1e6) * 0.1).toFixed(2);
+  const toPrizePoolFormatted = ((parseFloat(ENTRY_FEE.toString()) / 1e6) * 0.9).toFixed(2);
 
   // Check USDC allowance
   const { data: allowance } = useReadContract({
@@ -184,14 +192,18 @@ export default function EntryForm() {
       setDunkText("");
       setParentCastUrl("");
       setErrors({});
-      setStep("form");
-      setTimeout(() => setSuccessMessage(""), 5000);
+      setStep("success");
+      setTimeout(() => {
+        setSuccessMessage("");
+        setStep("form");
+      }, 5000);
     },
     onError: (error: Error & { status?: number; data?: any }) => {
       console.error("Failed to submit entry:", error);
       setErrors({
         payment: error.message || "Failed to submit entry. Please try again.",
       });
+      setStep("form");
     },
   });
 
@@ -199,6 +211,7 @@ export default function EntryForm() {
   useEffect(() => {
     if (isApproved && step === "approve") {
       setStep("pay");
+      handleEnterGame();
     }
   }, [isApproved, step]);
 
@@ -220,6 +233,7 @@ export default function EntryForm() {
     if (!gameContractAddress || !address) return;
     
     setErrors({});
+    setShowConfirmation(false);
     approveUsdc({
       address: usdcAddress,
       abi: USDC_ABI,
@@ -248,6 +262,18 @@ export default function EntryForm() {
       functionName: "enterGame",
       args: [tempCastHash],
     });
+  };
+
+  const handleConfirmPayment = () => {
+    // Check if already approved
+    const hasAllowance = allowance && allowance >= ENTRY_FEE;
+    if (hasAllowance) {
+      setShowConfirmation(false);
+      setStep("pay");
+      handleEnterGame();
+    } else {
+      handleApprove();
+    }
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -280,90 +306,92 @@ export default function EntryForm() {
       return;
     }
 
-    // Check if approved
-    const hasAllowance = allowance && allowance >= ENTRY_FEE;
-    if (!hasAllowance) {
-      handleApprove();
-      return;
-    }
-
-    // Enter game
-    handleEnterGame();
+    // Show confirmation dialog
+    setShowConfirmation(true);
   };
 
   // Show sign-in prompt if user is not authenticated
   if (isUserLoading) {
     return (
-      <div className="w-full max-w-2xl mx-auto p-4">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
-        </div>
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
 
   if (!user?.data) {
     return (
-      <div className="w-full max-w-2xl mx-auto p-4">
-        <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-          <p className="text-lg font-medium text-yellow-900 mb-4">
-            Sign in required
-          </p>
-          <p className="text-sm text-yellow-700 mb-4">
-            You need to sign in to enter the game.
-          </p>
-          <button
-            onClick={signIn}
-            disabled={isUserLoading}
-            className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          >
-            Sign In
-          </button>
+      <div className="text-center py-8">
+        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+          <span className="text-2xl">🔐</span>
         </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Sign in required</h3>
+        <p className="text-sm text-gray-500 mb-6">
+          You need to sign in to enter the game.
+        </p>
+        <Button
+          onClick={signIn}
+          disabled={isUserLoading}
+          className="bg-primary-500 hover:bg-primary-600 text-white"
+        >
+          Sign In with Farcaster
+        </Button>
       </div>
     );
   }
 
   const isLoading = isApproving || isWaitingApproval || isEntering || isWaitingEnter || isSubmitting;
-  const hasAllowance = allowance && allowance >= ENTRY_FEE;
+
+  // Get current transaction step for stepper
+  const getTransactionStep = () => {
+    if (step === "approve") return isApproved ? "approved" : "approving";
+    if (step === "pay") return isEntered ? "confirmed" : "paying";
+    if (step === "submit") return "confirming";
+    if (step === "success") return "success";
+    return "idle";
+  };
 
   return (
     <div className="w-full">
-      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Dunk Text Field */}
         <div>
           <label
             htmlFor="dunkText"
-            className="block text-sm font-semibold text-gray-900 mb-2"
+            className="block text-sm font-medium text-gray-900 mb-2"
           >
-            Your Dunk 🔥
+            Your Dunk
           </label>
           <textarea
             id="dunkText"
             value={dunkText}
             onChange={(e) => setDunkText(e.target.value)}
-            placeholder="Write something fire... make them laugh, make them think, or make them react! 🎯"
-            rows={5}
-            className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none transition-all duration-200 text-base ${
-              errors.dunkText ? "border-red-500 focus:ring-red-500" : "border-gray-200 focus:shadow-glow-orange"
+            placeholder="Write something that will get engagement..."
+            rows={4}
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none transition-shadow text-sm ${
+              errors.dunkText 
+                ? "border-red-300 focus:ring-red-500" 
+                : "border-gray-200"
             }`}
             disabled={isLoading}
           />
-          <div className="flex items-center justify-between mt-1">
+          <div className="flex items-center justify-between mt-1.5">
             {errors.dunkText ? (
               <p className="text-sm text-red-600">{errors.dunkText}</p>
             ) : (
-              <p className="text-xs text-gray-500">Max engagement = Max chance to win!</p>
+              <p className="text-xs text-gray-500">Higher engagement = better chance to win</p>
             )}
             <p className="text-xs text-gray-400">{dunkText.length} chars</p>
           </div>
         </div>
 
+        {/* Parent Cast URL Field */}
         <div>
           <label
             htmlFor="parentCastUrl"
-            className="block text-sm font-semibold text-gray-900 mb-2"
+            className="block text-sm font-medium text-gray-900 mb-2"
           >
-            Reply to Cast (Optional) 💬
+            Reply to Cast <span className="text-gray-400 font-normal">(optional)</span>
           </label>
           <input
             id="parentCastUrl"
@@ -371,114 +399,96 @@ export default function EntryForm() {
             value={parentCastUrl}
             onChange={(e) => setParentCastUrl(e.target.value)}
             placeholder="https://warpcast.com/username/0x..."
-            className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 text-base ${
-              errors.parentCastUrl ? "border-red-500 focus:ring-red-500" : "border-gray-200 focus:shadow-glow-orange"
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow text-sm ${
+              errors.parentCastUrl 
+                ? "border-red-300 focus:ring-red-500" 
+                : "border-gray-200"
             }`}
             disabled={isLoading}
           />
-          {errors.parentCastUrl ? (
-            <p className="mt-1 text-sm text-red-600">{errors.parentCastUrl}</p>
-          ) : (
-            <p className="mt-1 text-xs text-gray-500">Make your dunk a reply to boost visibility</p>
+          {errors.parentCastUrl && (
+            <p className="mt-1.5 text-sm text-red-600">{errors.parentCastUrl}</p>
           )}
         </div>
 
+        {/* Wallet Connection Warning */}
         {!isConnected && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
+          <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
+            <p className="text-sm text-amber-800">
               Please connect your wallet to enter the game.
             </p>
           </div>
         )}
 
-        {step === "approve" && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              {isWaitingApproval
-                ? "Waiting for approval transaction..."
-                : "Approving USDC..."}
-            </p>
-          </div>
+        {/* Transaction Status */}
+        {step !== "form" && step !== "success" && (
+          <TransactionStatus 
+            step={getTransactionStep()}
+            txHash={enterHash || approveHash}
+          />
         )}
 
-        {step === "pay" && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              {isWaitingEnter
-                ? "Waiting for payment transaction..."
-                : "Processing payment..."}
-            </p>
-          </div>
-        )}
-
-        {step === "submit" && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">Submitting entry...</p>
-          </div>
-        )}
-
+        {/* Error Message */}
         {errors.payment && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="rounded-lg bg-red-50 border border-red-200 p-4">
             <p className="text-sm text-red-800">{errors.payment}</p>
           </div>
         )}
 
+        {/* Success Message */}
         {successMessage && (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="rounded-lg bg-green-50 border border-green-200 p-4">
             <p className="text-sm text-green-800">{successMessage}</p>
           </div>
         )}
 
-        <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-          <p className="text-sm text-gray-700 mb-2">
-            Entry Fee: <span className="font-semibold">
-              {isLoadingEntryFee ? "Loading..." : `${parseFloat(ENTRY_FEE.toString()) / 1e6} USDC`}
+        {/* Entry Fee Info */}
+        <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Entry Fee</span>
+            <span className="text-sm font-semibold text-gray-900">
+              {isLoadingEntryFee ? "..." : `${entryFeeFormatted} USDC`}
             </span>
+          </div>
+          <p className="text-xs text-gray-500">
+            90% goes to prize pool • One entry per day • Highest engagement wins
           </p>
-          {!isLoadingEntryFee && (
-            <>
-              <p className="text-xs text-gray-500 mb-1">
-                <span className="font-medium">10% fee</span> ({((parseFloat(ENTRY_FEE.toString()) / 1e6) * 0.1).toFixed(1)} USDC) goes to platform, <span className="font-medium">90%</span> ({((parseFloat(ENTRY_FEE.toString()) / 1e6) * 0.9).toFixed(1)} USDC) goes to pot
-              </p>
-              <p className="text-xs text-gray-500">
-                You can only enter once per day. The cast with the highest engagement wins the pot!
-              </p>
-            </>
-          )}
         </div>
 
-        <button
+        {/* Submit Button */}
+        <Button
           type="submit"
           disabled={isLoading || !isConnected}
-          className="w-full px-4 sm:px-6 py-3.5 sm:py-4 bg-gradient-primary text-white font-bold text-base sm:text-lg rounded-xl shadow-lg hover:shadow-glow-orange active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 min-h-[48px] sm:min-h-[56px]"
+          className="w-full h-12 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
         >
           {isLoading ? (
             <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
               <span>
-                {step === "approve"
-                  ? "Approving USDC..."
-                  : step === "pay"
-                  ? "Processing Payment..."
-                  : step === "submit"
-                  ? "Submitting Entry..."
-                  : "Processing..."}
+                {step === "approve" ? "Approving..." : 
+                 step === "pay" ? "Processing..." : 
+                 step === "submit" ? "Submitting..." : "Processing..."}
               </span>
             </>
-          ) : !hasAllowance ? (
-            <>
-              <span>🚀</span>
-              <span>Approve & Enter Game</span>
-            </>
           ) : (
-            <>
-              <span>🎯</span>
-              <span>Enter Game ({isLoadingEntryFee ? "..." : `${parseFloat(ENTRY_FEE.toString()) / 1e6} USDC`})</span>
-            </>
+            <span>
+              Enter Game{!isLoadingEntryFee && ` • ${entryFeeFormatted} USDC`}
+            </span>
           )}
-        </button>
+        </Button>
       </form>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        open={showConfirmation}
+        onOpenChange={setShowConfirmation}
+        onConfirm={handleConfirmPayment}
+        entryFee={entryFeeFormatted}
+        platformFee={platformFeeFormatted}
+        toPrizePool={toPrizePoolFormatted}
+        contractAddress={gameContractAddress}
+        isLoading={isApproving}
+      />
     </div>
   );
 }
-

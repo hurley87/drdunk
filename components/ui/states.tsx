@@ -2,6 +2,7 @@
 
 import { useUser } from "@/contexts/user-context";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 /**
  * Loading fallback component for pages that require authentication
@@ -9,9 +10,9 @@ import { Loader2 } from "lucide-react";
 export function PageLoader() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
-      <div className="text-center space-y-4">
-        <Loader2 className="w-10 h-10 animate-spin text-orange-600 mx-auto" />
-        <p className="text-gray-600">Loading...</p>
+      <div className="text-center">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-3" />
+        <p className="text-sm text-gray-500">Loading...</p>
       </div>
     </div>
   );
@@ -25,30 +26,28 @@ export function SignInPrompt() {
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
-      <div className="max-w-md w-full text-center space-y-6">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center mx-auto">
-          <span className="text-4xl">🔐</span>
+      <div className="max-w-sm w-full text-center">
+        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+          <span className="text-2xl">🔐</span>
         </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Sign In Required</h2>
-          <p className="text-gray-600">
-            Please sign in to access this feature and start dunking!
-          </p>
-        </div>
-        <button
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">Sign In Required</h2>
+        <p className="text-sm text-gray-500 mb-6">
+          Please sign in to access this feature.
+        </p>
+        <Button
           onClick={signIn}
           disabled={isLoading}
-          className="btn-primary w-full flex items-center justify-center gap-2"
+          className="w-full bg-primary-500 hover:bg-primary-600 text-white"
         >
           {isLoading ? (
             <>
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
               <span>Signing in...</span>
             </>
           ) : (
             <span>Sign In with Farcaster</span>
           )}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -70,18 +69,16 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <div className="min-h-[40vh] flex items-center justify-center px-4">
-      <div className="max-w-md w-full text-center space-y-6">
-        <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mx-auto">
-          <span className="text-4xl">⚠️</span>
+      <div className="max-w-sm w-full text-center">
+        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+          <span className="text-2xl">⚠️</span>
         </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
-          <p className="text-gray-600">{message}</p>
-        </div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">{title}</h2>
+        <p className="text-sm text-gray-500 mb-6">{message}</p>
         {onRetry && (
-          <button onClick={onRetry} className="btn-secondary mx-auto">
+          <Button onClick={onRetry} variant="outline">
             Try Again
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -107,20 +104,17 @@ export function EmptyState({
   onAction,
 }: EmptyStateProps) {
   return (
-    <div className="p-12 bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-dashed border-gray-300 rounded-xl text-center space-y-4">
-      <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mx-auto">
-        <span className="text-3xl">{icon}</span>
+    <div className="py-12 text-center border-2 border-dashed border-gray-200 rounded-lg">
+      <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+        <span className="text-xl">{icon}</span>
       </div>
-      <div>
-        <h3 className="text-lg font-bold text-gray-900 mb-1">{title}</h3>
-        {message && <p className="text-sm text-gray-600">{message}</p>}
-      </div>
+      <h3 className="text-sm font-medium text-gray-900 mb-1">{title}</h3>
+      {message && <p className="text-xs text-gray-500 mb-4">{message}</p>}
       {actionLabel && onAction && (
-        <button onClick={onAction} className="btn-primary mx-auto">
+        <Button onClick={onAction} className="bg-primary-500 hover:bg-primary-600 text-white">
           {actionLabel}
-        </button>
+        </Button>
       )}
     </div>
   );
 }
-

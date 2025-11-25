@@ -2,151 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 255, 255, 255;
-  --orange-primary: 249, 115, 22;
-  --purple-primary: 168, 85, 247;
-  --pink-accent: 236, 72, 153;
-  
-  /* Design tokens */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.25rem;
-  
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-glow-orange: 0 0 20px rgba(249, 115, 22, 0.3);
-  --shadow-glow-purple: 0 0 20px rgba(168, 85, 247, 0.3);
-}
+@layer base {
+  :root {
+    /* Shadcn CSS Variables - Orange theme */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 24.6 95% 53.1%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 24.6 95% 53.1%;
+    --chart-1: 24.6 95% 53.1%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.625rem;
+  }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
-  font-feature-settings: 'cv11' 1, 'ss01' 1;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 24.6 95% 53.1%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 24.6 95% 53.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11" 1, "ss01" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
-
-  /* Custom scrollbar */
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 4px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
-  }
-
-  /* Animations */
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% {
-      opacity: 1;
-      box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
-    }
-    50% {
-      opacity: .9;
-      box-shadow: 0 0 0 4px rgba(249, 115, 22, 0);
-    }
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
-  }
-
-  .animate-pulse-glow {
-    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
 }
 
 @layer components {
-  /* Card styles */
+  /* Simplified Card - Stripe-style */
   .card {
-    @apply bg-white rounded-xl shadow-soft border border-gray-100 p-4 sm:p-6;
+    @apply bg-white rounded-lg border border-gray-200 p-5 shadow-sm;
   }
 
-  .card-hover {
-    @apply transition-all duration-300 hover:shadow-soft-lg hover:border-primary-200 hover:-translate-y-0.5;
-  }
-
-  .card-gradient {
-    @apply bg-gradient-card rounded-xl shadow-soft border border-primary-100/50 p-4 sm:p-6;
-  }
-
-  /* Button styles */
+  /* Simplified Button - Stripe-style */
   .btn-primary {
-    @apply px-6 py-3 bg-gradient-primary text-white font-bold rounded-xl shadow-lg hover:shadow-glow-orange focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95;
+    @apply px-4 py-2.5 bg-primary-500 text-white font-medium rounded-lg
+           hover:bg-primary-600 active:bg-primary-700
+           focus:outline-none focus:ring-2 focus:ring-primary-500/20
+           disabled:opacity-50 disabled:cursor-not-allowed
+           transition-colors duration-150;
   }
 
   .btn-secondary {
-    @apply px-4 py-2 bg-gradient-to-r from-secondary-50 to-accent-50 text-secondary-700 font-medium rounded-lg border border-secondary-200 hover:from-secondary-100 hover:to-accent-100 hover:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95;
+    @apply px-4 py-2.5 bg-white text-gray-700 font-medium rounded-lg
+           border border-gray-300
+           hover:bg-gray-50 active:bg-gray-100
+           focus:outline-none focus:ring-2 focus:ring-gray-500/20
+           disabled:opacity-50 disabled:cursor-not-allowed
+           transition-colors duration-150;
   }
 
-  .btn-accent {
-    @apply px-6 py-3 bg-gradient-accent text-white font-bold rounded-xl shadow-lg hover:shadow-glow-pink focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95;
-  }
-
-  /* Badge styles */
+  /* Badge styles - simplified */
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
   }
 
   .badge-primary {
-    @apply bg-primary-100 text-primary-700 border border-primary-200;
-  }
-
-  .badge-secondary {
-    @apply bg-secondary-100 text-secondary-700 border border-secondary-200;
-  }
-
-  .badge-accent {
-    @apply bg-accent-100 text-accent-700 border border-accent-200;
+    @apply bg-primary-100 text-primary-700;
   }
 
   .badge-success {
-    @apply bg-green-100 text-green-800 border border-green-200;
+    @apply bg-green-100 text-green-700;
   }
 
   .badge-warning {
-    @apply bg-yellow-100 text-yellow-800 border border-yellow-200;
+    @apply bg-amber-100 text-amber-700;
   }
 
-  /* Modern input styles */
-  .input-modern {
-    @apply w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white border-gray-200 text-base;
-  }
-
-  .input-modern:focus {
-    @apply shadow-glow-orange;
+  .badge-error {
+    @apply bg-red-100 text-red-700;
   }
 }
 
@@ -155,37 +128,30 @@ body {
   .safe-area-inset-bottom {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
-  
+
   .safe-area-inset-top {
     padding-top: max(0.5rem, env(safe-area-inset-top));
   }
 }
 
-/* Mobile-first improvements */
+/* Mobile optimizations */
 @media (max-width: 640px) {
-  /* Better touch targets */
-  button, a, input, textarea, select {
+  button,
+  a,
+  input,
+  textarea,
+  select {
     min-height: 44px;
   }
-  
-  /* Improved scrolling */
-  * {
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  /* Prevent text size adjustment on iOS */
-  input, textarea, select {
+
+  input,
+  textarea,
+  select {
     font-size: 16px;
-  }
-  
-  /* Better spacing for mobile */
-  body {
-    padding: 0;
-    margin: 0;
   }
 }
 
-/* Prevent pull-to-refresh on mobile while maintaining scroll */
+/* Prevent pull-to-refresh */
 html {
   overscroll-behavior-y: contain;
 }
@@ -195,7 +161,7 @@ body {
   touch-action: pan-y;
 }
 
-/* Native-like transitions */
+/* Native-like tap highlight */
 * {
   -webkit-tap-highlight-color: transparent;
 }
@@ -205,11 +171,11 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Better focus states for accessibility */
+/* Focus states for accessibility */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid rgb(249, 115, 22);
+  outline: 2px solid hsl(24.6 95% 53.1%);
   outline-offset: 2px;
 }

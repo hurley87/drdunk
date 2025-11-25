@@ -322,7 +322,7 @@ export default function Home() {
                   <Icon isActive={isActive} />
                 </span>
                 <span>{item.label}</span>
-                <span className="text-[10px] font-normal text-white/50">
+                <span className="text-xs font-normal text-white/50">
                   {item.blurb}
                 </span>
               </button>
