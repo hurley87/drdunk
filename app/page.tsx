@@ -1,7 +1,9 @@
 import { Metadata } from "next";
-import RoundStatus from "@/components/game/round-status";
 import Leaderboard from "@/components/game/leaderboard";
-import { Trophy, Zap, Target } from "lucide-react";
+import { Trophy } from "lucide-react";
+import TodayStats from "@/components/game/today-stats";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Doctor Dunk - Daily Leaderboard",
@@ -24,42 +26,17 @@ export default function DailyLeaderboardPage() {
             </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Zap className="w-3.5 h-3.5 text-gray-500" />
-                <span className="text-xs text-gray-500 font-medium">Entry Fee</span>
-              </div>
-              <p className="text-sm font-semibold text-gray-900">1 USDC</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Trophy className="w-3.5 h-3.5 text-gray-500" />
-                <span className="text-xs text-gray-500 font-medium">To Winner</span>
-              </div>
-              <p className="text-sm font-semibold text-gray-900">90%</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Target className="w-3.5 h-3.5 text-gray-500" />
-                <span className="text-xs text-gray-500 font-medium">Fee</span>
-              </div>
-              <p className="text-sm font-semibold text-gray-900">10%</p>
-            </div>
-          </div>
+          {/* Today's Stats */}
+          <TodayStats />
         </div>
       </div>
 
       {/* Main Content */}
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
-        {/* Round Status Card */}
-        <RoundStatus />
-
         {/* How It Works */}
         <div className="card">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">How It Works</h2>
-          <div className="space-y-4">
+          <div className="space-y-4 mb-6">
             <div className="flex gap-3">
               <div className="w-6 h-6 rounded-full bg-primary-500 text-white flex items-center justify-center flex-shrink-0 text-xs font-medium">
                 1
@@ -79,6 +56,9 @@ export default function DailyLeaderboardPage() {
               <p className="text-sm text-gray-600">Highest engagement score at midnight UTC wins 90% of the pot</p>
             </div>
           </div>
+          <Button asChild className="w-full" size="lg">
+            <Link href="/create">Submit your cast</Link>
+          </Button>
         </div>
 
         {/* Leaderboard */}

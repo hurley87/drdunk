@@ -86,7 +86,6 @@ export default function RoundStatus() {
         <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
           <p className="text-xs text-gray-500 mb-1">Entries</p>
           <p className="text-lg font-semibold text-gray-900">{entryCount}</p>
-          <p className="text-xs text-gray-500">Players</p>
         </div>
 
         <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
