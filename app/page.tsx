@@ -11,6 +11,13 @@ export const metadata: Metadata = {
 };
 
 export default function DailyLeaderboardPage() {
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
   return (
     <div className="min-h-screen bg-white pb-20">
       {/* Header Section */}
@@ -21,8 +28,8 @@ export default function DailyLeaderboardPage() {
               <Trophy className="w-5 h-5 text-primary-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Daily Dunk</h1>
-              <p className="text-sm text-gray-500">Today&apos;s Competition</p>
+              <h1 className="text-lg font-semibold text-gray-900">Daily Dunk</h1>
+              <p className="text-sm text-gray-500">{formattedDate}</p>
             </div>
           </div>
 

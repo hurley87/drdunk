@@ -8,52 +8,50 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ProfileHeader() {
   const { user, isLoading } = useUser();
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2.5 px-4 py-3">
-        <Skeleton className="w-8 h-8 rounded-full" />
-        <div className="flex-1">
-          <Skeleton className="h-4 w-24 mb-1" />
-          <Skeleton className="h-3 w-16" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!user || !user.data) {
-    return (
-      <div className="flex items-center gap-2.5 px-4 py-3">
-        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-          <User className="w-4 h-4 text-gray-400" />
-        </div>
-        <span className="text-sm text-gray-500">Not signed in</span>
-      </div>
-    );
-  }
-
-  const userData = user.data;
-
   return (
-    <div className="flex items-center gap-2.5 px-4 py-3">
-      {userData.pfp_url ? (
-        <Image
-          src={userData.pfp_url}
-          alt={userData.display_name || userData.username}
-          width={32}
-          height={32}
-          className="rounded-full border border-gray-200"
-        />
+    <div className="flex items-center justify-between px-4 py-3">
+      {/* Left: Doctor Dunk */}
+      <h1 className="text-lg font-semibold text-gray-900">Doctor Dunk</h1>
+
+      {/* Right: Profile */}
+      {isLoading ? (
+        <div className="flex items-center gap-2.5">
+          <Skeleton className="w-8 h-8 rounded-full" />
+          <div>
+            <Skeleton className="h-4 w-24 mb-1" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+        </div>
+      ) : !user || !user.data ? (
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+            <User className="w-4 h-4 text-gray-400" />
+          </div>
+          <span className="text-sm text-gray-500">Not signed in</span>
+        </div>
       ) : (
-        <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
-          <User className="w-4 h-4 text-primary-600" />
+        <div className="flex items-center gap-2.5">
+          {user.data.pfp_url ? (
+            <Image
+              src={user.data.pfp_url}
+              alt={user.data.display_name || user.data.username}
+              width={32}
+              height={32}
+              className="rounded-full border border-gray-200"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+              <User className="w-4 h-4 text-primary-600" />
+            </div>
+          )}
+          <div className="min-w-0 hidden sm:block">
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {user.data.display_name || user.data.username}
+            </p>
+            <p className="text-xs text-gray-500 truncate">@{user.data.username}</p>
+          </div>
         </div>
       )}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 truncate">
-          {userData.display_name || userData.username}
-        </p>
-        <p className="text-xs text-gray-500 truncate">@{userData.username}</p>
-      </div>
     </div>
   );
 }
