@@ -11,7 +11,9 @@ import { env } from "@/lib/env";
 import { ConfirmationDialog } from "./confirmation-dialog";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, ExternalLink, Check } from "lucide-react";
+import { useApiQuery } from "@/hooks/use-api-query";
+import type { NeynarCast } from "@/lib/neynar";
 
 // Validation for cast URL or hash
 const castUrlOrHashSchema = z.string().min(1, "Cast URL or hash is required").refine(
@@ -138,6 +140,8 @@ export default function EntryForm() {
   
   const [parentCastUrl, setParentCastUrl] = useState("");
   const [dunkText, setDunkText] = useState("");
+  const [selectedCast, setSelectedCast] = useState<NeynarCast | null>(null);
+  const [castLookupIdentifier, setCastLookupIdentifier] = useState<string>("");
   const [errors, setErrors] = useState<{
     dunkText?: string;
     parentCastUrl?: string;
@@ -146,6 +150,39 @@ export default function EntryForm() {
   const [successMessage, setSuccessMessage] = useState("");
   const [step, setStep] = useState<"form" | "approve" | "pay" | "submit" | "success">("form");
   const [showConfirmation, setShowConfirmation] = useState(false);
+
+  // Lookup cast when identifier is provided
+  const { data: castData, isLoading: isLookingUpCast, error: castLookupError } = useApiQuery<{
+    success: boolean;
+    cast: NeynarCast;
+  }>({
+    url: `/api/cast/lookup?identifier=${encodeURIComponent(castLookupIdentifier)}`,
+    method: "GET",
+    isProtected: false,
+    enabled: !!castLookupIdentifier && castLookupIdentifier.trim().length > 0,
+    retry: false,
+    queryKey: ["cast-lookup", castLookupIdentifier],
+  });
+
+  // Handle cast lookup success
+  useEffect(() => {
+    if (castData?.cast) {
+      setSelectedCast(castData.cast);
+      setParentCastUrl(castLookupIdentifier);
+      setErrors((prev) => ({ ...prev, parentCastUrl: undefined }));
+    }
+  }, [castData, castLookupIdentifier]);
+
+  // Handle cast lookup error
+  useEffect(() => {
+    if (castLookupError && castLookupIdentifier) {
+      setSelectedCast(null);
+      setErrors((prev) => ({
+        ...prev,
+        parentCastUrl: "Cast not found. Please check the URL or hash.",
+      }));
+    }
+  }, [castLookupError, castLookupIdentifier]);
 
   // Get USDC contract address based on chain or env
   const usdcAddress = (() => {
@@ -215,6 +252,8 @@ export default function EntryForm() {
       setSuccessMessage("Entry submitted successfully! Your cast has been posted.");
       setDunkText("");
       setParentCastUrl("");
+      setSelectedCast(null);
+      setCastLookupIdentifier("");
       setErrors({});
       setStep("success");
       setTimeout(() => {
@@ -324,6 +363,12 @@ export default function EntryForm() {
       return;
     }
 
+    // Check if cast is selected
+    if (!selectedCast) {
+      setErrors({ parentCastUrl: "Please select a cast first" });
+      return;
+    }
+
     // Check if wallet is connected
     if (!isConnected || !address) {
       setErrors({ payment: "Please connect your wallet" });
@@ -332,6 +377,17 @@ export default function EntryForm() {
 
     // Show confirmation dialog
     setShowConfirmation(true);
+  };
+
+  const handleCastLookup = () => {
+    const trimmed = parentCastUrl.trim();
+    if (!trimmed) {
+      setErrors({ parentCastUrl: "Please enter a cast URL or hash" });
+      return;
+    }
+    setCastLookupIdentifier(trimmed);
+    setSelectedCast(null);
+    setErrors((prev) => ({ ...prev, parentCastUrl: undefined }));
   };
 
   // Show sign-in prompt if user is not authenticated
@@ -378,7 +434,7 @@ export default function EntryForm() {
   return (
     <div className="w-full">
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Parent Cast URL Field - Required, styled like dark search bar */}
+        {/* Parent Cast URL Field - Required */}
         <div>
           <label
             htmlFor="parentCastUrl"
@@ -386,26 +442,93 @@ export default function EntryForm() {
           >
             Reply to Cast
           </label>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-            <input
-              id="parentCastUrl"
-              type="text"
-              value={parentCastUrl}
-              onChange={(e) => setParentCastUrl(e.target.value)}
-              placeholder="Search by cast URL or hash"
-              className={`w-full pl-11 pr-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow text-sm ${
-                errors.parentCastUrl 
-                  ? "border-red-300 focus:ring-red-500" 
-                  : "border-gray-200"
-              }`}
-              disabled={isLoading}
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+              <input
+                id="parentCastUrl"
+                type="text"
+                value={parentCastUrl}
+                onChange={(e) => {
+                  setParentCastUrl(e.target.value);
+                  setSelectedCast(null);
+                  setErrors((prev) => ({ ...prev, parentCastUrl: undefined }));
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleCastLookup();
+                  }
+                }}
+                placeholder="Search by cast URL or hash"
+                className={`w-full pl-11 pr-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow text-sm ${
+                  errors.parentCastUrl 
+                    ? "border-red-300 focus:ring-red-500" 
+                    : "border-gray-200"
+                }`}
+                disabled={isLoading || isLookingUpCast}
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={handleCastLookup}
+              disabled={isLoading || isLookingUpCast || !parentCastUrl.trim()}
+              className="px-4 bg-primary-500 hover:bg-primary-600 text-white"
+            >
+              {isLookingUpCast ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Lookup"
+              )}
+            </Button>
           </div>
           {errors.parentCastUrl && (
             <p className="mt-1.5 text-sm text-red-600">{errors.parentCastUrl}</p>
           )}
+          {isLookingUpCast && (
+            <p className="mt-1.5 text-sm text-gray-500">Looking up cast...</p>
+          )}
         </div>
+
+        {/* Cast Preview */}
+        {selectedCast && (
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <div className="flex items-start gap-3">
+              <img
+                src={selectedCast.author.pfp_url || "/images/icon.png"}
+                alt={selectedCast.author.display_name}
+                className="w-10 h-10 rounded-full"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-medium text-gray-900">
+                    {selectedCast.author.display_name}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    @{selectedCast.author.username}
+                  </span>
+                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                </div>
+                <p className="text-sm text-gray-700 mb-2 whitespace-pre-wrap break-words">
+                  {selectedCast.text}
+                </p>
+                <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <span>{selectedCast.reactions.likes_count} likes</span>
+                  <span>{selectedCast.reactions.recasts_count} recasts</span>
+                  <span>{selectedCast.replies.count} replies</span>
+                </div>
+                <a
+                  href={`https://warpcast.com/${selectedCast.author.username}/${selectedCast.hash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-2 text-xs text-primary-600 hover:text-primary-700"
+                >
+                  View cast <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Dunk Text Field */}
         <div>
@@ -419,18 +542,22 @@ export default function EntryForm() {
             id="dunkText"
             value={dunkText}
             onChange={(e) => setDunkText(e.target.value)}
-            placeholder="Write something that will get engagement..."
+            placeholder={selectedCast ? "Write something that will get engagement..." : "Please select a cast first..."}
             rows={4}
             className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none transition-shadow text-sm ${
               errors.dunkText 
                 ? "border-red-300 focus:ring-red-500" 
-                : "border-gray-200"
+                : selectedCast
+                ? "border-gray-200"
+                : "border-gray-200 bg-gray-50"
             }`}
-            disabled={isLoading}
+            disabled={isLoading || !selectedCast}
           />
           <div className="flex items-center justify-between mt-1.5">
             {errors.dunkText ? (
               <p className="text-sm text-red-600">{errors.dunkText}</p>
+            ) : !selectedCast ? (
+              <p className="text-xs text-gray-500">Select a cast above to continue</p>
             ) : (
               <p className="text-xs text-gray-500">Higher engagement = better chance to win</p>
             )}
@@ -485,7 +612,7 @@ export default function EntryForm() {
         {/* Submit Button */}
         <Button
           type="submit"
-          disabled={isLoading || !isConnected}
+          disabled={isLoading || !isConnected || !selectedCast}
           className="w-full h-12 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
         >
           {isLoading ? (

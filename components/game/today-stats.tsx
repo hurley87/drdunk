@@ -1,9 +1,8 @@
 "use client";
 
 import { useApiQuery } from "@/hooks/use-api-query";
-import { formatTimeRemaining, getTimeRemaining, getCurrentRoundId } from "@/lib/game-utils";
+import { formatTimeRemaining, getTimeRemaining } from "@/lib/game-utils";
 import { useEffect, useState } from "react";
-import { RoundStatusSkeleton } from "@/components/ui/skeletons";
 
 interface RoundData {
   success: boolean;
