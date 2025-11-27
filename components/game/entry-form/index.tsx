@@ -11,16 +11,40 @@ import { env } from "@/lib/env";
 import { ConfirmationDialog } from "./confirmation-dialog";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
+
+// Validation for cast URL or hash
+const castUrlOrHashSchema = z.string().min(1, "Cast URL or hash is required").refine(
+  (val) => {
+    const trimmed = val.trim();
+    // Accept URLs (must start with http:// or https://)
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      try {
+        new URL(trimmed);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    // Accept cast hashes (must start with 0x and be hex)
+    if (trimmed.startsWith("0x") && /^0x[a-fA-F0-9]+$/.test(trimmed)) {
+      return true;
+    }
+    return false;
+  },
+  {
+    message: "Must be a valid cast URL (https://warpcast.com/...) or cast hash (0x...)",
+  }
+);
 
 const dunkSchema = z.object({
+  parentCastUrl: castUrlOrHashSchema,
   dunkText: z.string().min(1, "Dunk text cannot be empty"),
-  parentCastUrl: z.string().url().optional(),
 });
 
 interface EntryFormData {
   dunkText: string;
-  parentCastUrl?: string;
+  parentCastUrl: string;
   paymentTxHash: string;
 }
 
@@ -112,8 +136,8 @@ export default function EntryForm() {
   const { user, isLoading: isUserLoading, signIn } = useUser();
   const { address, isConnected, chain } = useAccount();
   
-  const [dunkText, setDunkText] = useState("");
   const [parentCastUrl, setParentCastUrl] = useState("");
+  const [dunkText, setDunkText] = useState("");
   const [errors, setErrors] = useState<{
     dunkText?: string;
     parentCastUrl?: string;
@@ -222,7 +246,7 @@ export default function EntryForm() {
       // Cast hash will be generated after cast is posted by the backend
       submitEntry({
         dunkText,
-        parentCastUrl: parentCastUrl || undefined,
+        parentCastUrl,
         paymentTxHash: enterHash,
       });
       setStep("submit");
@@ -283,17 +307,17 @@ export default function EntryForm() {
 
     // Client-side validation
     const validationResult = dunkSchema.safeParse({
+      parentCastUrl,
       dunkText,
-      parentCastUrl: parentCastUrl || undefined,
     });
 
     if (!validationResult.success) {
       const fieldErrors: { dunkText?: string; parentCastUrl?: string } = {};
       validationResult.error.errors.forEach((err) => {
-        if (err.path[0] === "dunkText") {
-          fieldErrors.dunkText = err.message;
-        } else if (err.path[0] === "parentCastUrl") {
+        if (err.path[0] === "parentCastUrl") {
           fieldErrors.parentCastUrl = err.message;
+        } else if (err.path[0] === "dunkText") {
+          fieldErrors.dunkText = err.message;
         }
       });
       setErrors(fieldErrors);
@@ -354,6 +378,35 @@ export default function EntryForm() {
   return (
     <div className="w-full">
       <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Parent Cast URL Field - Required, styled like dark search bar */}
+        <div>
+          <label
+            htmlFor="parentCastUrl"
+            className="block text-sm font-medium text-gray-900 mb-2"
+          >
+            Reply to Cast
+          </label>
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            <input
+              id="parentCastUrl"
+              type="text"
+              value={parentCastUrl}
+              onChange={(e) => setParentCastUrl(e.target.value)}
+              placeholder="Search by cast URL or hash"
+              className={`w-full pl-11 pr-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow text-sm ${
+                errors.parentCastUrl 
+                  ? "border-red-300 focus:ring-red-500" 
+                  : "border-gray-200"
+              }`}
+              disabled={isLoading}
+            />
+          </div>
+          {errors.parentCastUrl && (
+            <p className="mt-1.5 text-sm text-red-600">{errors.parentCastUrl}</p>
+          )}
+        </div>
+
         {/* Dunk Text Field */}
         <div>
           <label
@@ -383,32 +436,6 @@ export default function EntryForm() {
             )}
             <p className="text-xs text-gray-400">{dunkText.length} chars</p>
           </div>
-        </div>
-
-        {/* Parent Cast URL Field */}
-        <div>
-          <label
-            htmlFor="parentCastUrl"
-            className="block text-sm font-medium text-gray-900 mb-2"
-          >
-            Reply to Cast <span className="text-gray-400 font-normal">(optional)</span>
-          </label>
-          <input
-            id="parentCastUrl"
-            type="url"
-            value={parentCastUrl}
-            onChange={(e) => setParentCastUrl(e.target.value)}
-            placeholder="https://warpcast.com/username/0x..."
-            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow text-sm ${
-              errors.parentCastUrl 
-                ? "border-red-300 focus:ring-red-500" 
-                : "border-gray-200"
-            }`}
-            disabled={isLoading}
-          />
-          {errors.parentCastUrl && (
-            <p className="mt-1.5 text-sm text-red-600">{errors.parentCastUrl}</p>
-          )}
         </div>
 
         {/* Wallet Connection Warning */}

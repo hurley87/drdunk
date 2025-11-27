@@ -9,9 +9,33 @@ import { createPublicClient, createWalletClient, http, decodeFunctionData } from
 import { base, baseSepolia } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 
+// Validation for cast URL or hash
+const castUrlOrHashSchema = z.string().min(1, "Cast URL or hash is required").refine(
+  (val) => {
+    const trimmed = val.trim();
+    // Accept URLs (must start with http:// or https://)
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      try {
+        new URL(trimmed);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    // Accept cast hashes (must start with 0x and be hex)
+    if (trimmed.startsWith("0x") && /^0x[a-fA-F0-9]+$/.test(trimmed)) {
+      return true;
+    }
+    return false;
+  },
+  {
+    message: "Must be a valid cast URL (https://warpcast.com/...) or cast hash (0x...)",
+  }
+);
+
 const enterGameSchema = z.object({
   dunkText: z.string().min(1, "Dunk text cannot be empty"),
-  parentCastUrl: z.string().url().optional(),
+  parentCastUrl: castUrlOrHashSchema,
   paymentTxHash: z.string().min(1, "Payment transaction hash required"),
 });
 
