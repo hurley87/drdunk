@@ -42,6 +42,10 @@ function isStepComplete(currentStep: TransactionStep, stepKey: string): boolean 
     confirming: 3,
   };
 
+  // A step is complete if we've moved past it
+  // "approved" means approving is complete
+  // "confirmed" means paying is complete
+  // "confirming" or "success" means confirming is complete
   return stepOrder[currentStep] > stepKeyOrder[stepKey];
 }
 
@@ -54,6 +58,8 @@ function isStepActive(currentStep: TransactionStep, stepKey: string): boolean {
     confirming: ["confirming"],
   };
 
+  // A step is active only if it's explicitly in the active map
+  // and we haven't moved past it (checked in the component)
   return activeMap[currentStep]?.includes(stepKey) || false;
 }
 
@@ -62,24 +68,26 @@ export function TransactionStatus({ step, txHash, className }: TransactionStatus
 
   return (
     <div className={cn("rounded-lg border border-gray-200 bg-gray-50 p-4", className)}>
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
         {STEPS.map((s, i) => {
           const isComplete = isStepComplete(step, s.key);
           const isActive = isStepActive(step, s.key);
+          // Prevent conflicting states: if step is complete, it shouldn't be active
+          const showActive = isActive && !isComplete;
 
           return (
-            <div key={s.key} className="flex items-center gap-2 flex-1">
+            <div key={s.key} className="flex items-center gap-2 flex-shrink-0 min-w-0">
               <div
                 className={cn(
                   "w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 transition-colors",
                   isComplete && "bg-green-500 text-white",
-                  isActive && "bg-primary-500 text-white",
-                  !isComplete && !isActive && "bg-gray-200 text-gray-500"
+                  showActive && "bg-primary-500 text-white",
+                  !isComplete && !showActive && "bg-gray-200 text-gray-500"
                 )}
               >
                 {isComplete ? (
                   <Check className="w-3 h-3" />
-                ) : isActive ? (
+                ) : showActive ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
                 ) : (
                   i + 1
@@ -87,18 +95,19 @@ export function TransactionStatus({ step, txHash, className }: TransactionStatus
               </div>
               <span
                 className={cn(
-                  "text-xs whitespace-nowrap",
+                  "text-xs whitespace-nowrap truncate max-w-[100px]",
                   isComplete && "text-green-700 font-medium",
-                  isActive && "text-primary-700 font-medium",
-                  !isComplete && !isActive && "text-gray-500"
+                  showActive && "text-primary-700 font-medium",
+                  !isComplete && !showActive && "text-gray-500"
                 )}
+                title={s.label}
               >
                 {s.label}
               </span>
               {i < STEPS.length - 1 && (
                 <div
                   className={cn(
-                    "h-px flex-1 mx-2",
+                    "h-px w-8 flex-shrink-0",
                     isComplete ? "bg-green-300" : "bg-gray-200"
                   )}
                 />

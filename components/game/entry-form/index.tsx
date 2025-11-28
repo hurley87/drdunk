@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useConnect } from "wagmi";
 import { useApiMutation } from "@/hooks/use-api-mutation";
 import { useUser } from "@/contexts/user-context";
+import { useMiniApp } from "@/contexts/miniapp-context";
 import { z } from "zod";
 import { parseUnits, Address } from "viem";
 import { base } from "viem/chains";
@@ -137,6 +138,8 @@ const DEFAULT_ENTRY_FEE = parseUnits("1", 6); // Default to 1 USDC (6 decimals) 
 export default function EntryForm() {
   const { user, isLoading: isUserLoading, signIn } = useUser();
   const { address, isConnected, chain } = useAccount();
+  const { connect, connectors, isPending: isConnecting } = useConnect();
+  const { isMiniAppReady } = useMiniApp();
   
   const [parentCastUrl, setParentCastUrl] = useState("");
   const [dunkText, setDunkText] = useState("");
@@ -183,6 +186,44 @@ export default function EntryForm() {
       }));
     }
   }, [castLookupError, castLookupIdentifier]);
+
+  // Auto-connect wallet when mini-app is ready
+  useEffect(() => {
+    if (!isMiniAppReady || isConnected || isConnecting || connectors.length === 0) {
+      return;
+    }
+
+    // Find the Farcaster mini-app connector
+    const farcasterConnector = connectors.find(
+      (connector) => {
+        const idMatch = connector.id === "farcasterFrame" || 
+                       connector.id === "farcasterMiniApp" ||
+                       connector.id?.toLowerCase().includes("farcaster");
+        const nameMatch = connector.name?.toLowerCase().includes("farcaster");
+        return (idMatch || nameMatch) && connector.ready;
+      }
+    );
+
+    if (farcasterConnector) {
+      console.log("[EntryForm] Auto-connecting wallet with connector:", {
+        id: farcasterConnector.id,
+        name: farcasterConnector.name,
+        ready: farcasterConnector.ready,
+      });
+      try {
+        connect({ connector: farcasterConnector });
+      } catch (error: unknown) {
+        console.error("[EntryForm] Failed to auto-connect wallet:", error);
+      }
+    } else {
+      // Log available connectors for debugging
+      console.log("[EntryForm] Available connectors:", connectors.map(c => ({
+        id: c.id,
+        name: c.name,
+        ready: c.ready,
+      })));
+    }
+  }, [isMiniAppReady, isConnected, isConnecting, connectors, connect]);
 
   // Get USDC contract address based on chain or env
   const usdcAddress = (() => {
@@ -263,8 +304,9 @@ export default function EntryForm() {
     },
     onError: (error: Error & { status?: number; data?: any }) => {
       console.error("Failed to submit entry:", error);
+      const errorMessage = error.data?.message || error.data?.error || error.message || "Failed to submit entry. Please try again.";
       setErrors({
-        payment: error.message || "Failed to submit entry. Please try again.",
+        payment: errorMessage,
       });
       setStep("form");
     },
@@ -432,7 +474,7 @@ export default function EntryForm() {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full max-w-full overflow-hidden">
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Parent Cast URL Field - Required */}
         <div>
@@ -553,24 +595,68 @@ export default function EntryForm() {
             }`}
             disabled={isLoading || !selectedCast}
           />
-          <div className="flex items-center justify-between mt-1.5">
-            {errors.dunkText ? (
-              <p className="text-sm text-red-600">{errors.dunkText}</p>
-            ) : !selectedCast ? (
-              <p className="text-xs text-gray-500">Select a cast above to continue</p>
-            ) : (
-              <p className="text-xs text-gray-500">Higher engagement = better chance to win</p>
-            )}
-            <p className="text-xs text-gray-400">{dunkText.length} chars</p>
+          <div className="flex items-center justify-between gap-2 mt-1.5">
+            <div className="flex-1 min-w-0">
+              {errors.dunkText ? (
+                <p className="text-sm text-red-600">{errors.dunkText}</p>
+              ) : !selectedCast ? (
+                <p className="text-xs text-gray-500">Select a cast above to continue</p>
+              ) : (
+                <p className="text-xs text-gray-500">Higher engagement = better chance to win</p>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">{dunkText.length} chars</p>
           </div>
         </div>
 
         {/* Wallet Connection Warning */}
         {!isConnected && (
           <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
-            <p className="text-sm text-amber-800">
-              Please connect your wallet to enter the game.
-            </p>
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm text-amber-800">
+                Please connect your wallet to enter the game.
+              </p>
+              {connectors.length > 0 && (
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const farcasterConnector = connectors.find(
+                      (connector) => {
+                        const idMatch = connector.id === "farcasterFrame" || 
+                                       connector.id === "farcasterMiniApp" ||
+                                       connector.id?.toLowerCase().includes("farcaster");
+                        const nameMatch = connector.name?.toLowerCase().includes("farcaster");
+                        return idMatch || nameMatch;
+                      }
+                    ) || connectors[0];
+                    if (farcasterConnector) {
+                      console.log("[EntryForm] Manual wallet connection with connector:", {
+                        id: farcasterConnector.id,
+                        name: farcasterConnector.name,
+                      });
+                      try {
+                        connect({ connector: farcasterConnector });
+                      } catch (error: unknown) {
+                        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+                        console.error("[EntryForm] Failed to connect wallet:", error);
+                        setErrors({ payment: `Failed to connect wallet: ${errorMessage}` });
+                      }
+                    }
+                  }}
+                  disabled={isConnecting}
+                  className="bg-amber-600 hover:bg-amber-700 text-white text-sm px-4 py-2"
+                >
+                  {isConnecting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Connecting...
+                    </>
+                  ) : (
+                    "Connect Wallet"
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         )}
 

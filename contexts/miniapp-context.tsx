@@ -10,8 +10,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import MiniAppWalletContext from "./miniapp-wallet-context";
-import MiniAppWalletProvider from "./miniapp-wallet-context";
 
 interface MiniAppContextType {
   isMiniAppReady: boolean;
@@ -31,7 +29,7 @@ export function MiniAppProvider({
 }) {
   const [context, setContext] = useState<MiniAppContext | null>(null);
   const [isMiniAppReady, setIsMiniAppReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
 
   const setMiniAppReady = useCallback(async () => {
     try {
@@ -92,7 +90,7 @@ export function MiniAppProvider({
         context,
       }}
     >
-      <MiniAppWalletProvider>{children}</MiniAppWalletProvider>
+      {children}
     </FarcasterMiniAppContext.Provider>
   );
 }
