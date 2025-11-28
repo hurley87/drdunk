@@ -12,17 +12,18 @@ import { env } from "@/lib/env";
 import { ConfirmationDialog } from "./confirmation-dialog";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
-import { useConfetti } from "@/components/ui/confetti";
-import { useGameSounds } from "@/hooks/use-game-sounds";
-import { Loader2, Search, ExternalLink, Check, Sparkles, Rocket, PartyPopper } from "lucide-react";
+import { Loader2, Search, ExternalLink, Check, Trophy } from "lucide-react";
 import { useApiQuery } from "@/hooks/use-api-query";
 import type { NeynarCast } from "@/lib/neynar";
+import { useSound } from "@/hooks/use-sound";
+import { Confetti } from "@/components/ui/confetti";
+import { cn } from "@/lib/utils";
 
 // Validation for cast URL or hash
 const castUrlOrHashSchema = z.string().min(1, "Cast URL or hash is required").refine(
   (val) => {
     const trimmed = val.trim();
+    // Accept URLs (must start with http:// or https://)
     if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
       try {
         new URL(trimmed);
@@ -31,6 +32,7 @@ const castUrlOrHashSchema = z.string().min(1, "Cast URL or hash is required").re
         return false;
       }
     }
+    // Accept cast hashes (must start with 0x and be hex)
     if (trimmed.startsWith("0x") && /^0x[a-fA-F0-9]+$/.test(trimmed)) {
       return true;
     }
@@ -89,6 +91,17 @@ const USDC_ABI = [
     type: "function",
     stateMutability: "view",
   },
+  {
+    inputs: [
+      { name: "from", type: "address" },
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    name: "transferFrom",
+    outputs: [{ name: "", type: "bool" }],
+    type: "function",
+    stateMutability: "nonpayable",
+  },
 ] as const;
 
 // DoctorDunk contract ABI
@@ -107,17 +120,30 @@ const DOCTOR_DUNK_ABI = [
     type: "function",
     stateMutability: "view",
   },
+  {
+    inputs: [],
+    name: "getTokenAddress",
+    outputs: [{ name: "", type: "address" }],
+    type: "function",
+    stateMutability: "view",
+  },
+  {
+    inputs: [],
+    name: "paymentToken",
+    outputs: [{ name: "", type: "address" }],
+    type: "function",
+    stateMutability: "view",
+  },
 ] as const;
 
-const DEFAULT_ENTRY_FEE = parseUnits("1", 6);
+const DEFAULT_ENTRY_FEE = parseUnits("1", 6); // Default to 1 USDC (6 decimals) if contract read fails
 
 export default function EntryForm() {
   const { user, isLoading: isUserLoading, signIn } = useUser();
   const { address, isConnected, chain } = useAccount();
   const { connect, connectors, isPending: isConnecting } = useConnect();
   const { isMiniAppReady } = useMiniApp();
-  const { fireWin, fireStars } = useConfetti();
-  const { playClick, playSuccess, playWin, playCoin, playError, playPop } = useGameSounds();
+  const { play } = useSound();
   
   const [parentCastUrl, setParentCastUrl] = useState("");
   const [dunkText, setDunkText] = useState("");
@@ -131,8 +157,9 @@ export default function EntryForm() {
   const [successMessage, setSuccessMessage] = useState("");
   const [step, setStep] = useState<"form" | "approve" | "pay" | "submit" | "success">("form");
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
-  // Lookup cast
+  // Lookup cast when identifier is provided
   const { data: castData, isLoading: isLookingUpCast, error: castLookupError } = useApiQuery<{
     success: boolean;
     cast: NeynarCast;
@@ -151,9 +178,9 @@ export default function EntryForm() {
       setSelectedCast(castData.cast);
       setParentCastUrl(castLookupIdentifier);
       setErrors((prev) => ({ ...prev, parentCastUrl: undefined }));
-      playPop();
+      play("pop"); // Sound effect for cast found
     }
-  }, [castData, castLookupIdentifier, playPop]);
+  }, [castData, castLookupIdentifier, play]);
 
   // Handle cast lookup error
   useEffect(() => {
@@ -163,16 +190,17 @@ export default function EntryForm() {
         ...prev,
         parentCastUrl: "Cast not found. Please check the URL or hash.",
       }));
-      playError();
+      play("error");
     }
-  }, [castLookupError, castLookupIdentifier, playError]);
+  }, [castLookupError, castLookupIdentifier, play]);
 
-  // Auto-connect wallet
+  // Auto-connect wallet when mini-app is ready
   useEffect(() => {
     if (!isMiniAppReady || isConnected || isConnecting || connectors.length === 0) {
       return;
     }
 
+    // Find the Farcaster mini-app connector
     const farcasterConnector = connectors.find(
       (connector) => {
         const idMatch = connector.id === "farcasterFrame" || 
@@ -184,16 +212,29 @@ export default function EntryForm() {
     );
 
     if (farcasterConnector) {
+      console.log("[EntryForm] Auto-connecting wallet with connector:", {
+        id: farcasterConnector.id,
+        name: farcasterConnector.name,
+        ready: farcasterConnector.ready,
+      });
       try {
         connect({ connector: farcasterConnector });
       } catch (error: unknown) {
         console.error("[EntryForm] Failed to auto-connect wallet:", error);
       }
+    } else {
+      // Log available connectors for debugging
+      console.log("[EntryForm] Available connectors:", connectors.map(c => ({
+        id: c.id,
+        name: c.name,
+        ready: c.ready,
+      })));
     }
   }, [isMiniAppReady, isConnected, isConnecting, connectors, connect]);
 
-  // Get USDC contract address
+  // Get USDC contract address based on chain or env
   const usdcAddress = (() => {
+    // Use env variable if available, otherwise fallback to chain-based defaults
     if (env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS) {
       return env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS as Address;
     }
@@ -202,11 +243,12 @@ export default function EntryForm() {
       : (USDC_BASE_SEPOLIA as Address);
   })();
 
+  // Get game contract address from environment variable
   const gameContractAddress = env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS 
     ? (env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS as Address)
     : undefined;
 
-  // Fetch entry fee from contract
+  // Dynamically fetch entryFee from contract
   const { data: contractEntryFee, isLoading: isLoadingEntryFee } = useReadContract({
     address: gameContractAddress,
     abi: DOCTOR_DUNK_ABI,
@@ -216,6 +258,7 @@ export default function EntryForm() {
     },
   });
 
+  // Use contract ENTRY_FEE if available, otherwise use default
   const ENTRY_FEE = contractEntryFee !== undefined ? contractEntryFee : DEFAULT_ENTRY_FEE;
   const entryFeeFormatted = (parseFloat(ENTRY_FEE.toString()) / 1e6).toFixed(2);
   const platformFeeFormatted = ((parseFloat(ENTRY_FEE.toString()) / 1e6) * 0.1).toFixed(2);
@@ -232,18 +275,19 @@ export default function EntryForm() {
     },
   });
 
-  // Contract interactions
+  // Approve USDC
   const { writeContract: approveUsdc, data: approveHash, isPending: isApproving } = useWriteContract();
   const { isLoading: isWaitingApproval, isSuccess: isApproved } = useWaitForTransactionReceipt({
     hash: approveHash,
   });
 
+  // Enter game (transfer USDC and submit cast hash)
   const { writeContract: enterGame, data: enterHash, isPending: isEntering } = useWriteContract();
   const { isLoading: isWaitingEnter, isSuccess: isEntered } = useWaitForTransactionReceipt({
     hash: enterHash,
   });
 
-  // Submit entry
+  // Submit entry to backend after payment
   const { mutate: submitEntry, isPending: isSubmitting } = useApiMutation<
     EntryResponse,
     EntryFormData
@@ -253,12 +297,7 @@ export default function EntryForm() {
     isProtected: true,
     body: (variables) => variables,
     onSuccess: (_data) => {
-      // 🎉 CELEBRATION TIME!
-      playWin();
-      fireWin();
-      setTimeout(() => fireStars(), 500);
-      
-      setSuccessMessage("🎉 Entry submitted successfully! Your cast has been posted.");
+      setSuccessMessage("Entry submitted successfully! Your cast has been posted.");
       setDunkText("");
       setParentCastUrl("");
       setSelectedCast(null);
@@ -266,35 +305,40 @@ export default function EntryForm() {
       setErrors({});
       setStep("success");
       
+      // Celebration effects!
+      setShowConfetti(true);
+      play("success");
+      
       setTimeout(() => {
+        setShowConfetti(false);
         setSuccessMessage("");
         setStep("form");
-      }, 6000);
+      }, 5000);
     },
     onError: (error: Error & { status?: number; data?: any }) => {
       console.error("Failed to submit entry:", error);
-      playError();
       const errorMessage = error.data?.message || error.data?.error || error.message || "Failed to submit entry. Please try again.";
       setErrors({
         payment: errorMessage,
       });
       setStep("form");
+      play("error");
     },
   });
 
   // Handle approval step
   useEffect(() => {
     if (isApproved && step === "approve") {
-      playSuccess();
       setStep("pay");
       handleEnterGame();
     }
   }, [isApproved, step]);
 
-  // Handle payment step
+  // Handle payment step - after entering game on contract
   useEffect(() => {
     if (isEntered && enterHash && step === "pay") {
-      playCoin();
+      // Submit to backend with payment tx hash
+      // Cast hash will be generated after cast is posted by the backend
       submitEntry({
         dunkText,
         parentCastUrl,
@@ -302,12 +346,11 @@ export default function EntryForm() {
       });
       setStep("submit");
     }
-  }, [isEntered, enterHash, step, dunkText, parentCastUrl, submitEntry, playCoin]);
+  }, [isEntered, enterHash, step, dunkText, parentCastUrl, submitEntry]);
 
   const handleApprove = () => {
     if (!gameContractAddress || !address) return;
     
-    playClick();
     setErrors({});
     setShowConfirmation(false);
     approveUsdc({
@@ -322,11 +365,13 @@ export default function EntryForm() {
   const handleEnterGame = () => {
     if (!gameContractAddress) {
       setErrors({ 
-        payment: "Game contract address not configured." 
+        payment: "Game contract address not configured. Please set NEXT_PUBLIC_GAME_CONTRACT_ADDRESS environment variable." 
       });
       return;
     }
 
+    // Generate a temporary cast hash - will be replaced after cast is posted
+    // In production, you might want to post the cast first, then enter game
     const tempCastHash = `temp-${Date.now()}`;
     
     setErrors({});
@@ -339,7 +384,7 @@ export default function EntryForm() {
   };
 
   const handleConfirmPayment = () => {
-    playClick();
+    // Check if already approved
     const hasAllowance = allowance && allowance >= ENTRY_FEE;
     if (hasAllowance) {
       setShowConfirmation(false);
@@ -352,10 +397,10 @@ export default function EntryForm() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    playClick();
     setErrors({});
     setSuccessMessage("");
 
+    // Client-side validation
     const validationResult = dunkSchema.safeParse({
       parentCastUrl,
       dunkText,
@@ -371,30 +416,33 @@ export default function EntryForm() {
         }
       });
       setErrors(fieldErrors);
-      playError();
+      play("error");
       return;
     }
 
+    // Check if cast is selected
     if (!selectedCast) {
       setErrors({ parentCastUrl: "Please select a cast first" });
-      playError();
+      play("error");
       return;
     }
 
+    // Check if wallet is connected
     if (!isConnected || !address) {
       setErrors({ payment: "Please connect your wallet" });
-      playError();
+      play("error");
       return;
     }
 
+    // Show confirmation dialog
     setShowConfirmation(true);
   };
 
   const handleCastLookup = () => {
-    playClick();
     const trimmed = parentCastUrl.trim();
     if (!trimmed) {
       setErrors({ parentCastUrl: "Please enter a cast URL or hash" });
+      play("error");
       return;
     }
     setCastLookupIdentifier(trimmed);
@@ -402,53 +450,42 @@ export default function EntryForm() {
     setErrors((prev) => ({ ...prev, parentCastUrl: undefined }));
   };
 
-  // Show sign-in prompt
+  // Show sign-in prompt if user is not authenticated
   if (isUserLoading) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex items-center justify-center py-12"
-      >
-        <Loader2 className="w-8 h-8 animate-spin text-primary-400" />
-      </motion.div>
+      <div className="flex items-center justify-center py-12 animate-pulse">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      </div>
     );
   }
 
   if (!user?.data) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center py-8"
-      >
-        <motion.div
-          animate={{ y: [0, -10, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-100 to-amber-100 flex items-center justify-center mx-auto mb-4"
-        >
-          <span className="text-3xl">🔐</span>
-        </motion.div>
+      <div className="text-center py-8 animate-in fade-in zoom-in duration-300">
+        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4 animate-bounce">
+          <span className="text-2xl">🔐</span>
+        </div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Sign in required</h3>
         <p className="text-sm text-gray-500 mb-6">
           You need to sign in to enter the game.
         </p>
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button
-            onClick={() => { playClick(); signIn(); }}
-            disabled={isUserLoading}
-            className="btn-game"
-          >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Sign In with Farcaster
-          </Button>
-        </motion.div>
-      </motion.div>
+        <Button
+          onClick={() => {
+            play("click");
+            signIn();
+          }}
+          disabled={isUserLoading}
+          className="bg-primary-500 hover:bg-primary-600 text-white"
+        >
+          Sign In with Farcaster
+        </Button>
+      </div>
     );
   }
 
   const isLoading = isApproving || isWaitingApproval || isEntering || isWaitingEnter || isSubmitting;
 
+  // Get current transaction step for stepper
   const getTransactionStep = () => {
     if (step === "approve") return isApproved ? "approved" : "approving";
     if (step === "pay") return isEntered ? "confirmed" : "paying";
@@ -458,49 +495,12 @@ export default function EntryForm() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="w-full max-w-full overflow-hidden"
-    >
-      {/* Success Celebration */}
-      <AnimatePresence>
-        {step === "success" && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="mb-6 p-6 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 text-center"
-          >
-            <motion.div
-              animate={{ 
-                rotate: [0, -10, 10, -10, 0],
-                scale: [1, 1.1, 1],
-              }}
-              transition={{ duration: 0.5 }}
-              className="inline-block mb-3"
-            >
-              <PartyPopper className="w-12 h-12 text-green-500" />
-            </motion.div>
-            <motion.h3
-              initial={{ y: 10 }}
-              animate={{ y: 0 }}
-              className="text-lg font-bold text-green-800 mb-1"
-            >
-              You&apos;re in the game!
-            </motion.h3>
-            <p className="text-sm text-green-600">{successMessage}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Parent Cast URL Field */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
+    <div className="w-full max-w-full overflow-hidden relative">
+      <Confetti isActive={showConfetti} />
+      
+      <form onSubmit={handleSubmit} className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        {/* Parent Cast URL Field - Required */}
+        <div>
           <label
             htmlFor="parentCastUrl"
             className="block text-sm font-medium text-gray-900 mb-2"
@@ -526,96 +526,78 @@ export default function EntryForm() {
                   }
                 }}
                 placeholder="Search by cast URL or hash"
-                className={`w-full pl-11 pr-4 py-3 bg-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm ${
+                className={cn(
+                  "w-full pl-11 pr-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm",
                   errors.parentCastUrl 
                     ? "border-red-300 focus:ring-red-500 animate-shake" 
                     : "border-gray-200"
-                }`}
+                )}
                 disabled={isLoading || isLookingUpCast}
               />
             </div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                type="button"
-                onClick={handleCastLookup}
-                disabled={isLoading || isLookingUpCast || !parentCastUrl.trim()}
-                className="px-4 bg-primary-500 hover:bg-primary-600 text-white rounded-xl"
-              >
-                {isLookingUpCast ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  "Lookup"
-                )}
-              </Button>
-            </motion.div>
+            <Button
+              type="button"
+              onClick={handleCastLookup}
+              disabled={isLoading || isLookingUpCast || !parentCastUrl.trim()}
+              className="px-4 bg-primary-500 hover:bg-primary-600 text-white"
+            >
+              {isLookingUpCast ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Lookup"
+              )}
+            </Button>
           </div>
-          <AnimatePresence>
-            {errors.parentCastUrl && (
-              <motion.p
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="mt-1.5 text-sm text-red-600"
-              >
-                {errors.parentCastUrl}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </motion.div>
+          {errors.parentCastUrl && (
+            <p className="mt-1.5 text-sm text-red-600 animate-in slide-in-from-top-1 fade-in duration-200">{errors.parentCastUrl}</p>
+          )}
+          {isLookingUpCast && (
+            <p className="mt-1.5 text-sm text-gray-500 animate-pulse">Looking up cast...</p>
+          )}
+        </div>
 
         {/* Cast Preview */}
-        <AnimatePresence>
-          {selectedCast && (
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-4"
-            >
-              <div className="flex items-start gap-3">
-                <motion.img
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  src={selectedCast.author.pfp_url || "/images/icon.png"}
-                  alt={selectedCast.author.display_name}
-                  className="w-10 h-10 rounded-full border-2 border-green-200"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-gray-900">
-                      {selectedCast.author.display_name}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      @{selectedCast.author.username}
-                    </span>
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 500 }}
-                    >
-                      <Check className="w-4 h-4 text-green-500" />
-                    </motion.div>
-                  </div>
-                  <p className="text-sm text-gray-700 mb-2 whitespace-pre-wrap break-words line-clamp-3">
-                    {selectedCast.text}
-                  </p>
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>{selectedCast.reactions.likes_count} likes</span>
-                    <span>{selectedCast.reactions.recasts_count} recasts</span>
-                    <span>{selectedCast.replies.count} replies</span>
-                  </div>
+        {selectedCast && (
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 animate-in fade-in zoom-in-95 duration-300">
+            <div className="flex items-start gap-3">
+              <img
+                src={selectedCast.author.pfp_url || "/images/icon.png"}
+                alt={selectedCast.author.display_name}
+                className="w-10 h-10 rounded-full shadow-sm"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-medium text-gray-900">
+                    {selectedCast.author.display_name}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    @{selectedCast.author.username}
+                  </span>
+                  <Check className="w-4 h-4 text-green-500 flex-shrink-0 animate-pop" />
                 </div>
+                <p className="text-sm text-gray-700 mb-2 whitespace-pre-wrap break-words">
+                  {selectedCast.text}
+                </p>
+                <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <span>{selectedCast.reactions.likes_count} likes</span>
+                  <span>{selectedCast.reactions.recasts_count} recasts</span>
+                  <span>{selectedCast.replies.count} replies</span>
+                </div>
+                <a
+                  href={`https://warpcast.com/${selectedCast.author.username}/${selectedCast.hash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-2 text-xs text-primary-600 hover:text-primary-700 hover:underline"
+                >
+                  View cast <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+        )}
 
         {/* Dunk Text Field */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
           <label
             htmlFor="dunkText"
             className="block text-sm font-medium text-gray-900 mb-2"
@@ -628,171 +610,137 @@ export default function EntryForm() {
             onChange={(e) => setDunkText(e.target.value)}
             placeholder={selectedCast ? "Write something that will get engagement..." : "Please select a cast first..."}
             rows={4}
-            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none transition-all text-sm ${
+            className={cn(
+              "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none transition-all duration-200 text-sm",
               errors.dunkText 
                 ? "border-red-300 focus:ring-red-500 animate-shake" 
                 : selectedCast
                 ? "border-gray-200"
                 : "border-gray-200 bg-gray-50"
-            }`}
+            )}
             disabled={isLoading || !selectedCast}
           />
           <div className="flex items-center justify-between gap-2 mt-1.5">
             <div className="flex-1 min-w-0">
               {errors.dunkText ? (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-sm text-red-600"
-                >
-                  {errors.dunkText}
-                </motion.p>
+                <p className="text-sm text-red-600 animate-in slide-in-from-top-1 fade-in duration-200">{errors.dunkText}</p>
+              ) : !selectedCast ? (
+                <p className="text-xs text-gray-500">Select a cast above to continue</p>
               ) : (
-                <p className="text-xs text-gray-500">
-                  {selectedCast ? "Higher engagement = better chance to win" : "Select a cast above to continue"}
-                </p>
+                <p className="text-xs text-gray-500">Higher engagement = better chance to win</p>
               )}
             </div>
-            <p className="text-xs text-gray-400 tabular-nums">{dunkText.length} chars</p>
+            <p className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap transition-colors duration-200" style={{
+              color: dunkText.length > 280 ? 'rgb(220 38 38)' : undefined
+            }}>{dunkText.length} chars</p>
           </div>
-        </motion.div>
+        </div>
 
         {/* Wallet Connection Warning */}
-        <AnimatePresence>
-          {!isConnected && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="rounded-xl bg-amber-50 border border-amber-200 p-4"
-            >
-              <div className="flex items-center justify-between gap-4">
-                <p className="text-sm text-amber-800">
-                  Please connect your wallet to enter the game.
-                </p>
-                {connectors.length > 0 && (
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        playClick();
-                        const farcasterConnector = connectors.find(
-                          (connector) => {
-                            const idMatch = connector.id === "farcasterFrame" || 
-                                           connector.id === "farcasterMiniApp" ||
-                                           connector.id?.toLowerCase().includes("farcaster");
-                            const nameMatch = connector.name?.toLowerCase().includes("farcaster");
-                            return idMatch || nameMatch;
-                          }
-                        ) || connectors[0];
-                        if (farcasterConnector) {
-                          try {
-                            connect({ connector: farcasterConnector });
-                          } catch (error: unknown) {
-                            const errorMessage = error instanceof Error ? error.message : "Unknown error";
-                            setErrors({ payment: `Failed to connect wallet: ${errorMessage}` });
-                          }
-                        }
-                      }}
-                      disabled={isConnecting}
-                      className="bg-amber-600 hover:bg-amber-700 text-white text-sm px-4 py-2 rounded-lg"
-                    >
-                      {isConnecting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                          Connecting...
-                        </>
-                      ) : (
-                        "Connect Wallet"
-                      )}
-                    </Button>
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {!isConnected && (
+          <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 animate-pulse">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm text-amber-800">
+                Please connect your wallet to enter the game.
+              </p>
+              {connectors.length > 0 && (
+                <Button
+                  type="button"
+                  onClick={() => {
+                    play("click");
+                    const farcasterConnector = connectors.find(
+                      (connector) => {
+                        const idMatch = connector.id === "farcasterFrame" || 
+                                       connector.id === "farcasterMiniApp" ||
+                                       connector.id?.toLowerCase().includes("farcaster");
+                        const nameMatch = connector.name?.toLowerCase().includes("farcaster");
+                        return idMatch || nameMatch;
+                      }
+                    ) || connectors[0];
+                    if (farcasterConnector) {
+                      connect({ connector: farcasterConnector });
+                    }
+                  }}
+                  disabled={isConnecting}
+                  className="bg-amber-600 hover:bg-amber-700 text-white text-sm px-4 py-2 shadow-sm"
+                >
+                  {isConnecting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Connecting...
+                    </>
+                  ) : (
+                    "Connect Wallet"
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Transaction Status */}
-        <AnimatePresence>
-          {step !== "form" && step !== "success" && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-            >
-              <TransactionStatus 
-                step={getTransactionStep()}
-                txHash={enterHash || approveHash}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {step !== "form" && step !== "success" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <TransactionStatus 
+              step={getTransactionStep()}
+              txHash={enterHash || approveHash}
+            />
+          </div>
+        )}
 
         {/* Error Message */}
-        <AnimatePresence>
-          {errors.payment && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="rounded-xl bg-red-50 border border-red-200 p-4"
-            >
-              <p className="text-sm text-red-800">{errors.payment}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {errors.payment && (
+          <div className="rounded-lg bg-red-50 border border-red-200 p-4 animate-in fade-in slide-in-from-bottom-2 duration-300 animate-shake">
+            <p className="text-sm text-red-800">{errors.payment}</p>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="rounded-lg bg-green-50 border border-green-200 p-4 animate-in fade-in zoom-in duration-500">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 animate-pop">
+                <Trophy className="w-4 h-4 text-green-600" />
+              </div>
+              <p className="text-sm text-green-800 font-medium">{successMessage}</p>
+            </div>
+          </div>
+        )}
 
         {/* Entry Fee Info */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 p-4"
-        >
+        <div className="rounded-lg bg-gray-50 border border-gray-200 p-4 transition-all hover:bg-gray-100">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-600">Entry Fee</span>
-            <span className="text-sm font-bold text-gray-900">
+            <span className="text-sm font-semibold text-gray-900">
               {isLoadingEntryFee ? "..." : `${entryFeeFormatted} USDC`}
             </span>
           </div>
           <p className="text-xs text-gray-500">
             90% goes to prize pool • One entry per day • Highest engagement wins
           </p>
-        </motion.div>
+        </div>
 
         {/* Submit Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          whileHover={{ scale: isLoading || !isConnected || !selectedCast ? 1 : 1.01 }}
-          whileTap={{ scale: isLoading || !isConnected || !selectedCast ? 1 : 0.98 }}
+        <Button
+          type="submit"
+          disabled={isLoading || !isConnected || !selectedCast}
+          className="w-full h-12 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-all disabled:opacity-50 shadow-md hover:shadow-lg active:scale-[0.98]"
         >
-          <Button
-            type="submit"
-            disabled={isLoading || !isConnected || !selectedCast}
-            className="w-full h-14 btn-game text-base"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                <span>
-                  {step === "approve" ? "Approving..." : 
-                   step === "pay" ? "Processing..." : 
-                   step === "submit" ? "Submitting..." : "Processing..."}
-                </span>
-              </>
-            ) : (
-              <>
-                <Rocket className="w-5 h-5 mr-2" />
-                <span>
-                  Enter Game{!isLoadingEntryFee && ` • ${entryFeeFormatted} USDC`}
-                </span>
-              </>
-            )}
-          </Button>
-        </motion.div>
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              <span>
+                {step === "approve" ? "Approving..." : 
+                 step === "pay" ? "Processing..." : 
+                 step === "submit" ? "Submitting..." : "Processing..."}
+              </span>
+            </>
+          ) : (
+            <span>
+              Enter Game{!isLoadingEntryFee && ` • ${entryFeeFormatted} USDC`}
+            </span>
+          )}
+        </Button>
       </form>
 
       {/* Confirmation Dialog */}
@@ -806,6 +754,6 @@ export default function EntryForm() {
         contractAddress={gameContractAddress}
         isLoading={isApproving}
       />
-    </motion.div>
+    </div>
   );
 }

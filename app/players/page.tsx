@@ -10,53 +10,7 @@ export const metadata: Metadata = {
 export default function PlayersPage() {
   return (
     <div className="min-h-screen pb-20">
-      {/* Header Section */}
-      <div className="bg-mesh border-b border-gray-200/50">
-        <div className="max-w-3xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="relative">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 blur-lg opacity-30 -z-10" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Hall of Fame
-              </h1>
-              <p className="text-sm text-gray-500">Top players & past winners</p>
-            </div>
-          </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="stat-card relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-br from-amber-200 to-yellow-300 rounded-bl-xl opacity-50" />
-              <div className="flex items-center gap-1.5 mb-1">
-                <Crown className="w-3.5 h-3.5 text-amber-500" />
-                <span className="text-xs text-gray-500 font-medium">Winners</span>
-              </div>
-              <p className="text-lg font-bold text-gray-900">Coming</p>
-            </div>
-            <div className="stat-card relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-br from-green-200 to-emerald-300 rounded-bl-xl opacity-50" />
-              <div className="flex items-center gap-1.5 mb-1">
-                <TrendingUp className="w-3.5 h-3.5 text-green-500" />
-                <span className="text-xs text-gray-500 font-medium">Entries</span>
-              </div>
-              <p className="text-lg font-bold text-gray-900">Soon</p>
-            </div>
-            <div className="stat-card relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-br from-purple-200 to-violet-300 rounded-bl-xl opacity-50" />
-              <div className="flex items-center gap-1.5 mb-1">
-                <Award className="w-3.5 h-3.5 text-purple-500" />
-                <span className="text-xs text-gray-500 font-medium">Prizes</span>
-              </div>
-              <p className="text-lg font-bold text-gray-900">TBD</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Main Content */}
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
