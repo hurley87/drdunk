@@ -43,7 +43,7 @@ export default function DunkPage() {
 
         {/* Leaderboard */}
         <div className="card">
-          <Leaderboard theme="light" />
+          <Leaderboard />
         </div>
 
         {/* Past Winners */}

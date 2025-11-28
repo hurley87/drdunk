@@ -28,7 +28,7 @@ export default function LeaderboardPage() {
       {/* Main Content */}
       <div className="max-w-3xl mx-auto px-4 py-6">
         <div className="card">
-          <Leaderboard theme="light" />
+          <Leaderboard />
         </div>
       </div>
     </div>
