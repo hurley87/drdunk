@@ -4,7 +4,6 @@ import { useUser } from "@/contexts/user-context";
 import { User, Flame } from "lucide-react";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
 export default function ProfileHeader() {
   const { user, isLoading } = useUser();

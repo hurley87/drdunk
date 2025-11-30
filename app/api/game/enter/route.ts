@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { validateQuickAuth } from "@/lib/quick-auth";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase"; 
 import { getCurrentRoundId } from "@/lib/game-utils";
 import { postDunkCast } from "@/lib/webhook/neynar";
 import { env } from "@/lib/env";
@@ -60,7 +60,10 @@ export async function POST(request: NextRequest) {
     // Validate input
     const validationResult = enterGameSchema.safeParse(body);
 
+    console.log("validationResult", validationResult);
+
     if (!validationResult.success) {
+
       return NextResponse.json(
         {
           error: "Validation failed",
@@ -86,6 +89,8 @@ export async function POST(request: NextRequest) {
     // Get current round ID
     const roundId = getCurrentRoundId();
 
+    console.log("roundId", roundId);
+
     // Check if user already entered today
     const { data: existingEntry, error: existingEntryError } = await supabase
       .from("game_entries")
@@ -94,12 +99,16 @@ export async function POST(request: NextRequest) {
       .eq("fid", fid)
       .single();
 
+    console.log("existingEntry", existingEntry);
+    console.log("existingEntryError", existingEntryError);
+
     // PGRST116 is "not found" error - this is expected if user hasn't entered yet
     if (existingEntryError && existingEntryError.code !== "PGRST116") {
       throw existingEntryError;
     }
 
     if (existingEntry) {
+      console.log("existingEntry", existingEntry);
       return NextResponse.json(
         {
           error: "Already entered",
@@ -108,6 +117,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    console.log("paymentTxHash", paymentTxHash);
 
     // Extract wallet address and temporary cast hash from payment transaction
     // IMPORTANT: Verify transaction succeeded on-chain before accepting entry
@@ -128,6 +139,8 @@ export async function POST(request: NextRequest) {
         hash: paymentTxHash as `0x${string}`,
       });
 
+      console.log("receipt", receipt);
+
       if (receipt.status !== "success") {
         return NextResponse.json(
           {
@@ -143,8 +156,11 @@ export async function POST(request: NextRequest) {
         hash: paymentTxHash as `0x${string}`,
       });
 
+      console.log("tx", tx);
+
       if (tx.from) {
         walletAddress = tx.from;
+        console.log("walletAddress", walletAddress);
       } else {
         console.warn("[game/enter] Could not extract wallet address from transaction");
       }
@@ -152,7 +168,10 @@ export async function POST(request: NextRequest) {
       // Verify transaction was sent to the correct contract
       // Use server-side env variable (not NEXT_PUBLIC prefix which is for client-side)
       const contractAddress = env.GAME_CONTRACT_ADDRESS;
+      console.log("contractAddress", contractAddress);
+      console.log("tx.to", tx.to);
       if (!contractAddress || tx.to?.toLowerCase() !== contractAddress.toLowerCase()) {
+        console.log("Invalid transaction");
         return NextResponse.json(
           {
             error: "Invalid transaction",
@@ -166,6 +185,7 @@ export async function POST(request: NextRequest) {
       // The contract function is enterGame(string memory castHash)
       if (tx.input) {
         try {
+          console.log("tx.input", tx.input);
           const DOCTOR_DUNK_ABI = [
             {
               inputs: [{ name: "castHash", type: "string" }],
@@ -189,7 +209,9 @@ export async function POST(request: NextRequest) {
           });
           
           if (decoded.functionName === "enterGame" && decoded.args && decoded.args[0]) {
+            console.log("decoded", decoded);
             tempCastHash = decoded.args[0] as string;
+            console.log("tempCastHash", tempCastHash);
           }
 
           // Read entryFee from contract to calculate actual pot contribution
@@ -200,19 +222,25 @@ export async function POST(request: NextRequest) {
               functionName: "entryFee",
             });
 
+            console.log("entryFee", entryFee);
+
             // Calculate pot contribution: entryFee * 90 / 100 (90% goes to pot, 10% is fee)
             // entryFee is in smallest unit (e.g., 1e6 for 1 USDC with 6 decimals)
             const entryFeeNumber = Number(entryFee);
             potContribution = (entryFeeNumber * 90) / 100 / 1e6; // Convert from smallest unit to USDC
+            console.log("potContribution", potContribution);
           } catch (feeError) {
+            console.log("feeError", feeError);
             console.warn("[game/enter] Failed to read entryFee from contract, using default 0.9:", feeError);
             // Continue with default 0.9 if contract read fails
           }
         } catch (decodeError) {
+          console.log("decodeError", decodeError);
           console.warn("[game/enter] Failed to decode transaction input:", decodeError);
         }
       }
     } catch (error) {
+      console.log("error", error);
       console.error("[game/enter] Failed to verify transaction:", error);
       return NextResponse.json(
         {
@@ -224,6 +252,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!walletAddress) {
+      console.log("!walletAddress", !walletAddress);
       return NextResponse.json(
         {
           error: "Invalid payment transaction",
@@ -232,6 +261,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    console.log("roundId", roundId);
 
     // Get or create current round
     let { data: round, error: roundError } = await supabase
