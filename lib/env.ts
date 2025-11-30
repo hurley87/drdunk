@@ -9,7 +9,6 @@ export const env = createEnv({
     REDIS_URL: z.string().min(1),
     REDIS_TOKEN: z.string().min(1),
     NEYNAR_WEBHOOK_SECRET: z.string().min(1),
-    OPENAI_API_KEY: z.string().min(1),
     SIGNER_UUID: z.string().min(1),
     BOT_FID: z.coerce.number().int().positive(),
     SUPABASE_URL: z.string().min(1).optional(),
