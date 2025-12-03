@@ -12,7 +12,8 @@ import { env } from "@/lib/env";
 import { ConfirmationDialog } from "./confirmation-dialog";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, ExternalLink, Check, Trophy, Zap } from "lucide-react";
+import { Loader2, Search, Check, Trophy, Zap, Eye } from "lucide-react";
+import { sdk } from "@farcaster/miniapp-sdk";
 import { useApiQuery } from "@/hooks/use-api-query";
 import type { NeynarCast } from "@/lib/neynar";
 import { useSound } from "@/hooks/use-sound";
@@ -583,14 +584,15 @@ export default function EntryForm() {
                   <span>{selectedCast.reactions.recasts_count} RECASTS</span>
                   <span>{selectedCast.replies.count} REPLIES</span>
                 </div>
-                <a
-                  href={`https://warpcast.com/${selectedCast.author.username}/${selectedCast.hash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 mt-3 font-mono text-xs text-red-500 hover:underline uppercase tracking-wide"
+                <button
+                  type="button"
+                  onClick={() => {
+                    sdk.actions.viewCast({ hash: selectedCast.hash });
+                  }}
+                  className="inline-flex items-center gap-1 mt-3 font-mono text-xs text-red-500 hover:underline uppercase tracking-wide cursor-pointer"
                 >
-                  VIEW CAST <ExternalLink className="w-3 h-3" />
-                </a>
+                  VIEW CAST <Eye className="w-3 h-3" />
+                </button>
               </div>
             </div>
           </div>

@@ -4,7 +4,8 @@ import { useApiQuery } from "@/hooks/use-api-query";
 import { formatTimeRemaining, getTimeRemaining } from "@/lib/game-utils";
 import { useEffect, useState } from "react";
 import { LeaderboardSkeleton } from "@/components/ui/skeletons";
-import { ExternalLink } from "lucide-react";
+import { Eye } from "lucide-react";
+import { sdk } from "@farcaster/miniapp-sdk";
 import { cn } from "@/lib/utils";
 
 interface LeaderboardEntry {
@@ -163,20 +164,21 @@ export default function Leaderboard() {
                   </div>
 
                   {/* View Cast Button */}
-                  {entry.castUrl && (
-                    <a
-                      href={entry.castUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  {entry.castHash && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sdk.actions.viewCast({ hash: entry.castHash });
+                      }}
                       className={cn(
-                        "flex-shrink-0 w-10 h-10 flex items-center justify-center border-3 transition-all duration-100",
+                        "flex-shrink-0 w-10 h-10 flex items-center justify-center border-3 transition-all duration-100 cursor-pointer",
                         isWinning
                           ? "border-white text-white hover:bg-white hover:text-red-500"
                           : "border-black text-black hover:bg-black hover:text-white"
                       )}
                     >
-                      <ExternalLink className="w-5 h-5" />
-                    </a>
+                      <Eye className="w-5 h-5" />
+                    </button>
                   )}
                 </div>
               </div>
