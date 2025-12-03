@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateQuickAuth } from "@/lib/quick-auth";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { createPublicClient, http, parseEther } from "viem";
+import { supabase, supabaseAdmin, isSupabaseAdminConfigured } from "@/lib/supabase";
+import { createPublicClient, http } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import { env } from "@/lib/env";
 
@@ -58,8 +58,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Supabase is configured
-    if (!isSupabaseConfigured()) {
+    // Check if Supabase admin is configured (requires service role key for write operations)
+    if (!isSupabaseAdminConfigured()) {
       return NextResponse.json(
         {
           error: "Service unavailable",
@@ -148,7 +148,8 @@ export async function POST(request: NextRequest) {
           // Verify the transaction was to the correct contract and function
           if (receipt.to?.toLowerCase() === contractAddress.toLowerCase()) {
             // Update database status only after successful on-chain transaction
-            const { error: updateError } = await supabase
+            // Use supabaseAdmin to bypass RLS for write operations
+            const { error: updateError } = await supabaseAdmin
               .from("game_rounds")
               .update({
                 status: "claimed",

@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { supabase, supabaseAdmin, isSupabaseAdminConfigured } from "@/lib/supabase";
 import { env } from "@/lib/env";
 import { calculateWeightedScore, getCurrentRoundId } from "@/lib/game-utils";
 
@@ -46,9 +46,9 @@ export async function updateEngagementMetrics() {
   try {
     console.log("[engagement-tracker] Starting engagement update...");
 
-    // Check if Supabase is configured
-    if (!isSupabaseConfigured()) {
-      const error = new Error("Database is not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY in your environment variables.");
+    // Check if Supabase admin is configured (requires service role key for write operations)
+    if (!isSupabaseAdminConfigured()) {
+      const error = new Error("Database is not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your environment variables.");
       console.error("[engagement-tracker] Supabase not configured:", error.message);
       throw error;
     }
@@ -95,9 +95,9 @@ export async function updateEngagementMetrics() {
         engagement.replies
       );
 
-      // Update entry
+      // Update entry (use supabaseAdmin to bypass RLS)
       updates.push(
-        supabase
+        supabaseAdmin
           .from("game_entries")
           .update({
             likes: engagement.likes,
@@ -108,9 +108,9 @@ export async function updateEngagementMetrics() {
           .eq("id", entry.id)
       );
 
-      // Create snapshot
+      // Create snapshot (use supabaseAdmin to bypass RLS)
       updates.push(
-        supabase
+        supabaseAdmin
           .from("engagement_snapshots")
           .insert({
             entry_id: entry.id,

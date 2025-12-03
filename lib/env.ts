@@ -13,6 +13,7 @@ export const env = createEnv({
     BOT_FID: z.coerce.number().int().positive(),
     SUPABASE_URL: z.string().min(1).optional(),
     SUPABASE_ANON_KEY: z.string().min(1).optional(),
+    SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
     GAME_CONTRACT_ADDRESS: z.string().min(1).optional(),
     USDC_CONTRACT_ADDRESS: z.string().min(1).optional(),
     CRON_SECRET: z.string().min(1).optional(),

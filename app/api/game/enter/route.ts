@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { validateQuickAuth } from "@/lib/quick-auth";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase"; 
+import { supabaseAdmin, isSupabaseAdminConfigured } from "@/lib/supabase"; 
 import { getCurrentRoundId } from "@/lib/game-utils";
 import { postDunkCast } from "@/lib/webhook/neynar";
 import { env } from "@/lib/env";
@@ -75,8 +75,8 @@ export async function POST(request: NextRequest) {
 
     const { dunkText, parentCastUrl, paymentTxHash } = validationResult.data;
 
-    // Check if Supabase is configured
-    if (!isSupabaseConfigured()) {
+    // Check if Supabase admin is configured (requires service role key for write operations)
+    if (!isSupabaseAdminConfigured()) {
       return NextResponse.json(
         {
           error: "Service unavailable",
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     console.log("roundId", roundId);
 
     // Check if user already entered today
-    const { data: existingEntry, error: existingEntryError } = await supabase
+    const { data: existingEntry, error: existingEntryError } = await supabaseAdmin
       .from("game_entries")
       .select("id")
       .eq("round_id", roundId)
@@ -265,7 +265,7 @@ export async function POST(request: NextRequest) {
     console.log("roundId", roundId);
 
     // Get or create current round
-    let { data: round, error: roundError } = await supabase
+    let { data: round, error: roundError } = await supabaseAdmin
       .from("game_rounds")
       .select("*")
       .eq("id", roundId)
@@ -279,7 +279,7 @@ export async function POST(request: NextRequest) {
     if (!round) {
       // Create new round
       const roundDate = new Date(roundId * 86400000).toISOString().split("T")[0];
-      const { error: createRoundError } = await supabase
+      const { error: createRoundError } = await supabaseAdmin
         .from("game_rounds")
         .insert({
           id: roundId,
@@ -293,7 +293,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Fetch the newly created round to get accurate pot_amount
-      const { data: newRound, error: fetchError } = await supabase
+      const { data: newRound, error: fetchError } = await supabaseAdmin
         .from("game_rounds")
         .select("*")
         .eq("id", roundId)
@@ -317,7 +317,7 @@ export async function POST(request: NextRequest) {
     // IMPORTANT: Update pot BEFORE creating entry to maintain atomicity - if entry creation fails,
     // we can rollback the pot increment. If we create entry first and pot update fails, we have
     // an orphaned entry with no pot increment.
-    const { error: potUpdateError } = await supabase.rpc("increment_pot_amount", {
+    const { error: potUpdateError } = await supabaseAdmin.rpc("increment_pot_amount", {
       round_id: roundId,
       amount: potContribution,
     });
@@ -325,7 +325,7 @@ export async function POST(request: NextRequest) {
     if (potUpdateError) {
       console.error("[game/enter] Failed to atomically increment pot:", potUpdateError);
       // If RPC function doesn't exist, this is a critical error
-      // The database function should be created via supabase-schema.sql
+      // The database function should be created via supabaseAdmin-schema.sql
       return NextResponse.json(
         {
           error: "Failed to update pot amount",
@@ -339,7 +339,7 @@ export async function POST(request: NextRequest) {
     // This ensures database operations succeed before we post to Farcaster
     // We'll update the cast_hash after posting the cast successfully
     const initialCastHash = tempCastHash || `temp-${Date.now()}-${fid}`;
-    let { data: entry, error: entryError } = await supabase
+    let { data: entry, error: entryError } = await supabaseAdmin
       .from("game_entries")
       .insert({
         round_id: roundId,
@@ -363,7 +363,7 @@ export async function POST(request: NextRequest) {
       // Rollback pot increment since entry creation failed
       // This maintains atomicity: either both succeed or both fail
       try {
-        await supabase.rpc("increment_pot_amount", {
+        await supabaseAdmin.rpc("increment_pot_amount", {
           round_id: roundId,
           amount: -potContribution, // Decrement by the same amount
         });
@@ -400,9 +400,9 @@ export async function POST(request: NextRequest) {
       // Rollback database operations since cast posting failed
       try {
         // Delete the entry
-        await supabase.from("game_entries").delete().eq("id", entry.id);
+        await supabaseAdmin.from("game_entries").delete().eq("id", entry.id);
         // Rollback pot increment
-        await supabase.rpc("increment_pot_amount", {
+        await supabaseAdmin.rpc("increment_pot_amount", {
           round_id: roundId,
           amount: -potContribution,
         });
@@ -423,8 +423,8 @@ export async function POST(request: NextRequest) {
     if (!castHash) {
       // Rollback database operations since cast posting failed
       try {
-        await supabase.from("game_entries").delete().eq("id", entry.id);
-        await supabase.rpc("increment_pot_amount", {
+        await supabaseAdmin.from("game_entries").delete().eq("id", entry.id);
+        await supabaseAdmin.rpc("increment_pot_amount", {
           round_id: roundId,
           amount: -potContribution,
         });
@@ -443,7 +443,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if cast hash already exists in this round (shouldn't happen, but check anyway)
-    const { data: existingCast, error: existingCastError } = await supabase
+    const { data: existingCast, error: existingCastError } = await supabaseAdmin
       .from("game_entries")
       .select("id")
       .eq("round_id", roundId)
@@ -458,8 +458,8 @@ export async function POST(request: NextRequest) {
     if (existingCast && existingCast.id !== entry.id) {
       // Rollback database operations since cast hash already exists
       try {
-        await supabase.from("game_entries").delete().eq("id", entry.id);
-        await supabase.rpc("increment_pot_amount", {
+        await supabaseAdmin.from("game_entries").delete().eq("id", entry.id);
+        await supabaseAdmin.rpc("increment_pot_amount", {
           round_id: roundId,
           amount: -potContribution,
         });
@@ -484,7 +484,7 @@ export async function POST(request: NextRequest) {
     let updateSucceeded = false;
     
     while (retries > 0 && !updateSucceeded) {
-      const { error, data } = await supabase
+      const { error, data } = await supabaseAdmin
         .from("game_entries")
         .update({
           cast_hash: castHash,
@@ -515,7 +515,7 @@ export async function POST(request: NextRequest) {
       console.error("[game/enter] Failed to update entry with real cast hash after retries:", updateError);
       
       // Try to fetch the current entry state to verify
-      const { data: currentEntry, error: fetchError } = await supabase
+      const { data: currentEntry, error: fetchError } = await supabaseAdmin
         .from("game_entries")
         .select("*")
         .eq("id", entry.id)

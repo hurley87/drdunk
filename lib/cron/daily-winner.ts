@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { supabase, supabaseAdmin, isSupabaseAdminConfigured } from "@/lib/supabase";
 import { getCurrentRoundId } from "@/lib/game-utils";
 import { createPublicClient, createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -45,9 +45,9 @@ export async function calculateDailyWinner() {
   try {
     console.log("[daily-winner] Starting daily winner calculation...");
 
-    // Check if Supabase is configured
-    if (!isSupabaseConfigured()) {
-      const error = new Error("Database is not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY in your environment variables.");
+    // Check if Supabase admin is configured (requires service role key for write operations)
+    if (!isSupabaseAdminConfigured()) {
+      const error = new Error("Database is not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your environment variables.");
       console.error("[daily-winner] Supabase not configured:", error.message);
       throw error;
     }
@@ -99,8 +99,8 @@ export async function calculateDailyWinner() {
 
     if (!entries || entries.length === 0) {
       console.log(`[daily-winner] No entries for round ${previousRoundId}`);
-      // Finalize round with no winner
-      await supabase
+      // Finalize round with no winner (use supabaseAdmin to bypass RLS)
+      await supabaseAdmin
         .from("game_rounds")
         .update({
           status: "finalized",
@@ -122,8 +122,8 @@ export async function calculateDailyWinner() {
 
     console.log(`[daily-winner] Winner: FID ${winnerFid}, Cast: ${winnerCastHash}`);
 
-    // Update round with winner
-    const { error: updateError } = await supabase
+    // Update round with winner (use supabaseAdmin to bypass RLS)
+    const { error: updateError } = await supabaseAdmin
       .from("game_rounds")
       .update({
         winner_fid: winnerFid,
@@ -195,8 +195,8 @@ export async function calculateDailyWinner() {
       } catch (error) {
         console.error("[daily-winner] Failed to finalize on contract:", error);
         // This is a critical error - database is updated but contract is not
-        // Rollback database update to maintain consistency
-        await supabase
+        // Rollback database update to maintain consistency (use supabaseAdmin to bypass RLS)
+        await supabaseAdmin
           .from("game_rounds")
           .update({
             status: "active", // Revert to active status

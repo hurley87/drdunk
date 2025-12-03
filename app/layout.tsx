@@ -28,7 +28,6 @@ export function generateMetadata(): Metadata {
     title: `${appName} - Daily Dunk Competition`,
     description: appDescription,
     metadataBase: new URL(appUrl),
-    themeColor: "#FF0000",
     appleWebApp: {
       capable: true,
       statusBarStyle: "black-translucent",
@@ -77,6 +76,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  themeColor: "#FF0000",
 };
 
 export default async function RootLayout({
@@ -91,7 +91,7 @@ export default async function RootLayout({
         <Providers cookie={cookie}>
           <div className="flex flex-col min-h-screen">
             {/* Profile Header - Brutalist */}
-            <header className="bg-white border-b-3 border-black sticky top-0 z-40 safe-area-inset-top">
+            <header className="bg-white border-b-3 border-black sticky top-0 z-40">
               <ProfileHeader />
             </header>
 

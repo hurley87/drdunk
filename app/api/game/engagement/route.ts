@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { supabase, supabaseAdmin, isSupabaseAdminConfigured } from "@/lib/supabase";
 import { env } from "@/lib/env";
 import { calculateWeightedScore } from "@/lib/game-utils";
 
@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Supabase is configured
-    if (!isSupabaseConfigured()) {
+    // Check if Supabase admin is configured (requires service role key for write operations)
+    if (!isSupabaseAdminConfigured()) {
       return NextResponse.json(
         {
           error: "Service unavailable",
@@ -126,9 +126,9 @@ export async function POST(request: NextRequest) {
         engagement.replies
       );
 
-      // Update entry
+      // Update entry (use supabaseAdmin to bypass RLS)
       updates.push(
-        supabase
+        supabaseAdmin
           .from("game_entries")
           .update({
             likes: engagement.likes,
@@ -139,9 +139,9 @@ export async function POST(request: NextRequest) {
           .eq("id", entry.id)
       );
 
-      // Create snapshot
+      // Create snapshot (use supabaseAdmin to bypass RLS)
       updates.push(
-        supabase
+        supabaseAdmin
           .from("engagement_snapshots")
           .insert({
             entry_id: entry.id,
