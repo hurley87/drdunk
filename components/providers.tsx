@@ -10,7 +10,13 @@ const ErudaProvider = dynamic(
   { ssr: false }
 );
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+export default function Providers({ 
+  children,
+  cookie: _cookie,
+}: { 
+  children: React.ReactNode;
+  cookie: string | null;
+}) {
   return (
     <ErudaProvider>
       <MiniAppWalletProvider>

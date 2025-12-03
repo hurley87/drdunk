@@ -1,4 +1,3 @@
-import { sendFrameNotification } from "@/lib/notification-client";
 import {
   deleteUserNotificationDetails,
   setUserNotificationDetails,
@@ -83,11 +82,6 @@ export async function POST(request: Request) {
       );
       if (event.notificationDetails) {
         await setUserNotificationDetails(fid, event.notificationDetails);
-        await sendFrameNotification({
-          fid,
-          title: `Welcome to Farcaster Mini App Template`,
-          body: `Thank you for adding Farcaster Mini App Template`,
-        });
       } else {
         await deleteUserNotificationDetails(fid);
       }
@@ -100,11 +94,7 @@ export async function POST(request: Request) {
     }
     case "notifications_enabled": {
       await setUserNotificationDetails(fid, event.notificationDetails);
-      await sendFrameNotification({
-        fid,
-        title: `Welcome to Farcaster Mini App Template`,
-        body: `Thank you for enabling notifications for Farcaster Mini App Template`,
-      });
+
 
       break;
     }
