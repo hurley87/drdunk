@@ -21,15 +21,17 @@ async function fetchCastEngagement(castHash: string) {
     }
 
     const data = await response.json();
-    const cast = data.result?.cast;
+    console.log("[engagement-tracker] Data:", data);
+    const cast = data.cast;
+    console.log("[engagement-tracker] Cast:", cast);
 
     if (!cast) {
       return null;
     }
 
     return {
-      likes: cast.reactions?.likes?.length || 0,
-      recasts: cast.reactions?.recasts?.length || 0,
+      likes: cast.reactions?.likes_count || 0,
+      recasts: cast.reactions?.recasts_count || 0,
       replies: cast.replies?.count || 0,
     };
   } catch (error) {
