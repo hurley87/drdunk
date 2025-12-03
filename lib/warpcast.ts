@@ -37,12 +37,12 @@ export async function getFarcasterManifest() {
       webhookUrl: `${appUrl}/api/webhook`,
       // Metadata https://github.com/farcasterxyz/miniapps/discussions/191
       subtitle: "Daily engagement competition", // 30 characters, no emojis or special characters, short description under app name
-      description: "Pay 1 USDC to enter with your best cast. Get the most likes, recasts, and replies by midnight UTC to win the prize pot. New competition daily!", // 170 characters, no emojis or special characters, promotional message displayed on Mini App Page
+      description: "Pay 1 USDC to enter your best cast. Get the most likes and replies by midnight UTC to win the pot. New competition every day.", // 170 characters, no emojis or special characters, promotional message displayed on Mini App Page
       primaryCategory: "games",
       tags: ["dunk", "competition", "engagement", "rewards", "daily"], // up to 5 tags, filtering/search tags
       tagline: "Dunk for glory, win the pot", // 30 characters, marketing tagline should be punchy and descriptive
-      ogTitle: "Doctor Dunk Daily Contest", // 30 characters, app name + short tag, Title case, no emojis
-      ogDescription: "Daily competition on Farcaster. Enter your best cast, get the most engagement, win the prize pot.", // 100 characters, summarize core benefits in 1-2 lines
+      ogTitle: "Doctor Dunk", // 30 characters, app name + short tag, Title case, no emojis
+      ogDescription: "Daily cast competition. Enter your best post and win the prize pot.", // 100 characters, summarize core benefits in 1-2 lines
       screenshotUrls: [
         // 1284 x 2778, visual previews of the app, max 3 screenshots
         `${appUrl}/images/feed.png`,
