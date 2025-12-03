@@ -70,7 +70,7 @@ export default function Leaderboard() {
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <h2 className="font-brutal text-2xl md:text-3xl uppercase">TODAY&apos;S BOARD</h2>
         {timeRemaining && (
           <span className="font-mono text-xs uppercase bg-black text-white px-3 py-1">
@@ -78,6 +78,9 @@ export default function Leaderboard() {
           </span>
         )}
       </div>
+      <p className="font-mono text-[10px] text-black/50 uppercase tracking-wide mb-4">
+        Scores update every 15 minutes
+      </p>
 
       {leaderboard.length === 0 ? (
         <div className="bg-white border-3 border-black border-dashed p-8 text-center">
