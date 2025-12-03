@@ -99,7 +99,6 @@ export async function POST(request: Request) {
       break;
     }
     case "notifications_enabled": {
-      console.log("notifications_enabled", event.notificationDetails);
       await setUserNotificationDetails(fid, event.notificationDetails);
       await sendFrameNotification({
         fid,
