@@ -26,6 +26,7 @@ export const useApiQuery = <TData, TBody = unknown>(
 
   return useQuery<TData>({
     ...queryOptions,
+    enabled,
     queryFn: async () => {
       // Use Quick Auth fetch for protected routes, regular fetch for public routes
       const response = isProtected
