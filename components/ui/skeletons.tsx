@@ -1,108 +1,102 @@
 "use client";
 
-import { motion } from "framer-motion";
-
 export function LeaderboardSkeleton() {
   return (
     <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <div className="h-6 w-40 bg-gray-200 rounded-lg animate-pulse" />
-        <div className="h-4 w-24 bg-gray-200 rounded-lg animate-pulse" />
+        <div className="h-8 w-48 bg-black/10 animate-pulse" />
+        <div className="h-6 w-24 bg-black animate-pulse" />
       </div>
       
       {/* Entries */}
-      {[...Array(5)].map((_, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.1 }}
-          className="p-4 rounded-xl border border-gray-100 bg-gradient-to-r from-gray-50 to-white"
-        >
-          <div className="flex items-start gap-3">
-            {/* Rank */}
-            <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
-            
-            {/* Content */}
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
-                {i === 0 && (
-                  <div className="h-5 w-16 bg-primary-100 rounded-full animate-pulse" />
-                )}
-              </div>
-              <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
-              <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse" />
+      {[...Array(5)].map((_, i) => {
+        const rotation = i % 2 === 0 ? "rotate-[0.3deg]" : "-rotate-[0.3deg]";
+        return (
+          <div
+            key={i}
+            className={`bg-white border-3 border-black shadow-brutal p-4 ${rotation}`}
+            style={{ animationDelay: `${i * 100}ms` }}
+          >
+            <div className="flex items-start gap-3">
+              {/* Rank */}
+              <div className="w-10 h-10 bg-black/10 border-3 border-black animate-pulse" />
               
-              {/* Stats */}
-              <div className="flex items-center gap-4 pt-1">
-                <div className="h-3 w-12 bg-gray-200 rounded animate-pulse" />
-                <div className="h-3 w-14 bg-gray-200 rounded animate-pulse" />
-                <div className="h-3 w-12 bg-gray-200 rounded animate-pulse" />
-                <div className="h-4 w-16 bg-primary-100 rounded animate-pulse ml-auto" />
+              {/* Content */}
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-20 bg-black/10 animate-pulse" />
+                  {i === 0 && (
+                    <div className="h-5 w-16 bg-red-500/20 animate-pulse" />
+                  )}
+                </div>
+                <div className="h-4 w-full bg-black/10 animate-pulse" />
+                <div className="h-4 w-3/4 bg-black/10 animate-pulse" />
+                
+                {/* Stats */}
+                <div className="flex items-center gap-4 pt-1">
+                  <div className="h-3 w-12 bg-black/10 animate-pulse" />
+                  <div className="h-3 w-14 bg-black/10 animate-pulse" />
+                  <div className="h-3 w-12 bg-black/10 animate-pulse" />
+                  <div className="h-4 w-16 bg-red-500/20 animate-pulse ml-auto" />
+                </div>
               </div>
+              
+              {/* Link */}
+              <div className="w-10 h-10 border-3 border-black bg-black/5 animate-pulse" />
             </div>
-            
-            {/* Link */}
-            <div className="w-8 h-8 rounded-lg bg-gray-100 animate-pulse" />
           </div>
-        </motion.div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
 export function StatCardSkeleton() {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="stat-card"
-    >
-      <div className="flex items-center justify-center gap-1.5 mb-2">
-        <div className="w-4 h-4 rounded bg-gray-200 animate-pulse" />
-        <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
-      </div>
-      <div className="h-7 w-20 mx-auto bg-gray-200 rounded animate-pulse" />
-    </motion.div>
+    <div className="bg-white border-3 border-black shadow-brutal-sm p-4 text-center">
+      <div className="h-3 w-16 mx-auto bg-black/10 animate-pulse mb-2" />
+      <div className="h-8 w-20 mx-auto bg-black/10 animate-pulse" />
+    </div>
   );
 }
 
 export function EntryFormSkeleton() {
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Cast URL Field */}
-      <div>
-        <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-2" />
-        <div className="flex gap-2">
-          <div className="flex-1 h-12 bg-gray-100 rounded-xl animate-pulse" />
-          <div className="w-20 h-12 bg-gray-200 rounded-xl animate-pulse" />
+      <div className="bg-white border-3 border-black shadow-brutal">
+        <div className="p-3 border-b-3 border-black bg-black">
+          <div className="h-4 w-24 bg-white/20 animate-pulse" />
+        </div>
+        <div className="p-4">
+          <div className="h-6 w-full bg-black/10 animate-pulse" />
         </div>
       </div>
       
       {/* Dunk Text */}
-      <div>
-        <div className="h-4 w-20 bg-gray-200 rounded animate-pulse mb-2" />
-        <div className="h-32 bg-gray-100 rounded-xl animate-pulse" />
+      <div className="bg-white border-3 border-black shadow-brutal rotate-[0.3deg]">
+        <div className="p-3 border-b-3 border-black bg-red-500">
+          <div className="h-4 w-24 bg-white/20 animate-pulse" />
+        </div>
+        <div className="p-4">
+          <div className="h-24 w-full bg-black/10 animate-pulse" />
+        </div>
       </div>
       
-      {/* Entry Fee */}
-      <div className="h-20 bg-gray-50 rounded-xl border border-gray-100 animate-pulse" />
-      
       {/* Submit Button */}
-      <div className="h-14 bg-gray-200 rounded-xl animate-pulse" />
+      <div className="h-16 bg-black/10 border-3 border-black animate-pulse" />
     </div>
   );
 }
 
 export function ProfileSkeleton() {
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
-      <div className="hidden sm:block">
-        <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-1" />
-        <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
+    <div className="flex items-center gap-3 bg-white border-3 border-black shadow-brutal-sm p-3">
+      <div className="w-12 h-12 bg-black/10 border-3 border-black animate-pulse" />
+      <div>
+        <div className="h-4 w-24 bg-black/10 animate-pulse mb-1" />
+        <div className="h-3 w-16 bg-black/10 animate-pulse" />
       </div>
     </div>
   );
@@ -110,42 +104,38 @@ export function ProfileSkeleton() {
 
 export function WinnerCardSkeleton() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="p-4 rounded-xl border border-gray-100 bg-gradient-to-r from-gray-50 to-white"
-    >
+    <div className="bg-white border-3 border-black shadow-brutal p-4">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+        <div className="w-14 h-14 bg-black animate-pulse" />
         <div className="flex-1">
-          <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-1" />
-          <div className="h-3 w-24 bg-gray-200 rounded animate-pulse" />
+          <div className="h-5 w-32 bg-black/10 animate-pulse mb-2" />
+          <div className="h-3 w-24 bg-black/10 animate-pulse" />
         </div>
         <div className="text-right">
-          <div className="h-5 w-20 bg-primary-100 rounded animate-pulse mb-1" />
-          <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
+          <div className="h-6 w-20 bg-red-500/20 animate-pulse mb-1" />
+          <div className="h-3 w-16 bg-black/10 animate-pulse" />
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 export function RoundStatusSkeleton() {
   return (
-    <div className="card">
-      <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-4" />
-      <div className="grid grid-cols-3 gap-4 mb-4">
+    <div className="bg-white border-3 border-black shadow-brutal">
+      {/* Header */}
+      <div className="border-b-3 border-black p-4 bg-black">
+        <div className="h-6 w-32 bg-white/20 animate-pulse" />
+      </div>
+      
+      {/* Stats Grid */}
+      <div className="grid grid-cols-3 divide-x-3 divide-black">
         {[...Array(3)].map((_, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.1 }}
-            className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100"
-          >
-            <div className="h-3 w-16 mx-auto bg-gray-200 rounded animate-pulse mb-2" />
-            <div className="h-6 w-12 mx-auto bg-gray-200 rounded animate-pulse" />
-          </motion.div>
+          <div key={i} className="p-4 text-center">
+            <div className="h-3 w-12 mx-auto bg-black/10 animate-pulse mb-2" />
+            <div className="h-8 w-16 mx-auto bg-black/10 animate-pulse mb-1" />
+            <div className="h-3 w-10 mx-auto bg-black/10 animate-pulse" />
+          </div>
         ))}
       </div>
     </div>

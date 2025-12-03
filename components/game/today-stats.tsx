@@ -3,7 +3,6 @@
 import { useApiQuery } from "@/hooks/use-api-query";
 import { formatTimeRemaining, getTimeRemaining } from "@/lib/game-utils";
 import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
 
 interface RoundData {
   success: boolean;
@@ -43,15 +42,19 @@ export default function TodayStats() {
   if (isLoading) {
     return (
       <div className="grid grid-cols-3 gap-3">
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100"
-          >
-            <div className="h-3 w-20 mx-auto mb-2 bg-gray-200 rounded animate-pulse" />
-            <div className="h-6 w-16 mx-auto bg-gray-200 rounded animate-pulse" />
-          </div>
-        ))}
+        {[...Array(3)].map((_, i) => {
+          const rotation = i === 0 ? "-rotate-2" : i === 1 ? "rotate-1" : "-rotate-1";
+          return (
+            <div
+              key={i}
+              className={`text-center p-4 bg-white border-3 border-black shadow-brutal-sm ${rotation}`}
+            >
+              <div className="h-3 w-16 mx-auto mb-2 bg-black/20 animate-pulse" />
+              <div className="h-8 w-14 mx-auto bg-black/20 animate-pulse" />
+              <div className="h-3 w-12 mx-auto mt-1 bg-black/20 animate-pulse" />
+            </div>
+          );
+        })}
       </div>
     );
   }
@@ -59,17 +62,20 @@ export default function TodayStats() {
   if (error) {
     return (
       <div className="grid grid-cols-3 gap-3">
-        <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-          <p className="text-xs text-gray-500 mb-1">Pot Size USDC</p>
-          <p className="text-lg font-semibold text-gray-900">-</p>
+        <div className="text-center p-4 bg-white border-3 border-black shadow-brutal-sm -rotate-2">
+          <p className="font-mono text-[10px] text-black/60 mb-1 uppercase tracking-widest">POT SIZE</p>
+          <p className="font-brutal text-3xl text-black leading-none">—</p>
+          <p className="font-mono text-[10px] text-black/60 uppercase tracking-wider">USDC</p>
         </div>
-        <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-          <p className="text-xs text-gray-500 mb-1">Entries</p>
-          <p className="text-lg font-semibold text-gray-900">-</p>
+        <div className="text-center p-4 bg-black border-3 border-black shadow-brutal-red rotate-1">
+          <p className="font-mono text-[10px] text-white/60 mb-1 uppercase tracking-widest">ENTRIES</p>
+          <p className="font-brutal text-3xl text-white leading-none">—</p>
+          <p className="font-mono text-[10px] text-white/60 uppercase tracking-wider">PLAYERS</p>
         </div>
-        <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-          <p className="text-xs text-gray-500 mb-1">Time Left</p>
-          <p className="text-sm font-semibold text-primary-600">-</p>
+        <div className="text-center p-4 bg-red-500 border-3 border-black shadow-brutal -rotate-1">
+          <p className="font-mono text-[10px] text-white/80 mb-1 uppercase tracking-widest">TIME LEFT</p>
+          <p className="font-brutal text-2xl text-white leading-none">—</p>
+          <p className="font-mono text-[10px] text-white/80 uppercase tracking-wider">REMAINING</p>
         </div>
       </div>
     );
@@ -81,30 +87,27 @@ export default function TodayStats() {
 
   return (
     <div className="grid grid-cols-3 gap-3">
-      <div className={cn(
-        "text-center p-3 bg-gray-50 rounded-lg border border-gray-100 transition-all hover:scale-105 hover:shadow-sm hover:border-primary-200",
-        "animate-in zoom-in-95 duration-300"
-      )}>
-        <p className="text-xs text-gray-500 mb-1">Pot Size USDC</p>
-        <p className="text-lg font-semibold text-gray-900">
+      {/* Pot Size */}
+      <div className="text-center p-4 bg-white border-3 border-black shadow-brutal-sm transition-all duration-100 transform -rotate-2 hover:rotate-0 hover:shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px]">
+        <p className="font-mono text-[10px] text-black/60 mb-1 uppercase tracking-widest">POT SIZE</p>
+        <p className="font-brutal text-3xl text-black leading-none">
           {potAmount.toFixed(1)}
         </p>
+        <p className="font-mono text-[10px] text-black/60 uppercase tracking-wider">USDC</p>
       </div>
 
-      <div className={cn(
-        "text-center p-3 bg-gray-50 rounded-lg border border-gray-100 transition-all hover:scale-105 hover:shadow-sm hover:border-primary-200",
-        "animate-in zoom-in-95 duration-300 delay-75"
-      )}>
-        <p className="text-xs text-gray-500 mb-1">Entries</p>
-        <p className="text-lg font-semibold text-gray-900">{entryCount}</p>
+      {/* Entries */}
+      <div className="text-center p-4 bg-black border-3 border-black shadow-brutal-red transition-all duration-100 transform rotate-1 hover:rotate-0 hover:translate-x-[-2px] hover:translate-y-[-2px]">
+        <p className="font-mono text-[10px] text-white/60 mb-1 uppercase tracking-widest">ENTRIES</p>
+        <p className="font-brutal text-3xl text-white leading-none">{entryCount}</p>
+        <p className="font-mono text-[10px] text-white/60 uppercase tracking-wider">PLAYERS</p>
       </div>
 
-      <div className={cn(
-        "text-center p-3 bg-gray-50 rounded-lg border border-gray-100 transition-all hover:scale-105 hover:shadow-sm hover:border-primary-200",
-        "animate-in zoom-in-95 duration-300 delay-150"
-      )}>
-        <p className="text-xs text-gray-500 mb-1">Time Left</p>
-        <p className="text-sm font-semibold text-primary-600 tabular-nums">{timeRemaining}</p>
+      {/* Time Left */}
+      <div className="text-center p-4 bg-red-500 border-3 border-black shadow-brutal transition-all duration-100 transform -rotate-1 hover:rotate-0 hover:translate-x-[-2px] hover:translate-y-[-2px]">
+        <p className="font-mono text-[10px] text-white/80 mb-1 uppercase tracking-widest">TIME LEFT</p>
+        <p className="font-mono text-xl text-white leading-none font-bold tabular-nums">{timeRemaining}</p>
+        <p className="font-mono text-[10px] text-white/80 uppercase tracking-wider">REMAINING</p>
       </div>
     </div>
   );

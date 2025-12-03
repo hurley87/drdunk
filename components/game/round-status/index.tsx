@@ -5,7 +5,6 @@ import { useUser } from "@/contexts/user-context";
 import { formatTimeRemaining, getTimeRemaining, getCurrentRoundId } from "@/lib/game-utils";
 import { useEffect, useState } from "react";
 import { RoundStatusSkeleton } from "@/components/ui/skeletons";
-import { Check } from "lucide-react";
 
 interface RoundData {
   success: boolean;
@@ -57,9 +56,9 @@ export default function RoundStatus() {
 
   if (error) {
     return (
-      <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-        <p className="text-sm text-red-800">
-          Failed to load round status. Please try again.
+      <div className="bg-red-500 border-3 border-black shadow-brutal p-4">
+        <p className="font-mono text-sm text-white uppercase">
+          ERROR: FAILED TO LOAD ROUND STATUS
         </p>
       </div>
     );
@@ -71,36 +70,49 @@ export default function RoundStatus() {
   const hasEntered = !!userEntry?.data;
 
   return (
-    <div className="card">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Round Status</h3>
+    <div className="bg-white border-3 border-black shadow-brutal">
+      {/* Header */}
+      <div className="border-b-3 border-black p-4 bg-black text-white">
+        <h3 className="font-brutal text-2xl uppercase">Round Status</h3>
+      </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-          <p className="text-xs text-gray-500 mb-1">Pot Size</p>
-          <p className="text-lg font-semibold text-gray-900">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-3 divide-x-3 divide-black">
+        {/* Pot Size */}
+        <div className="p-4 text-center bg-stripes-red">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-black/60">Pot</p>
+          <p className="font-brutal text-3xl md:text-4xl mt-1">
             {potAmount.toFixed(1)}
           </p>
-          <p className="text-xs text-gray-500">USDC</p>
+          <p className="font-mono text-xs text-black/60 uppercase">USDC</p>
         </div>
 
-        <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-          <p className="text-xs text-gray-500 mb-1">Entries</p>
-          <p className="text-lg font-semibold text-gray-900">{entryCount}</p>
+        {/* Entries */}
+        <div className="p-4 text-center">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-black/60">Entries</p>
+          <p className="font-brutal text-3xl md:text-4xl mt-1">{entryCount}</p>
+          <p className="font-mono text-xs text-black/60 uppercase">DUNKS</p>
         </div>
 
-        <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-          <p className="text-xs text-gray-500 mb-1">Time Left</p>
-          <p className="text-sm font-semibold text-primary-600">{timeRemaining}</p>
+        {/* Time Left */}
+        <div className="p-4 text-center">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-black/60">Ends In</p>
+          <p className="font-mono text-lg md:text-xl font-bold mt-1 text-red-500">
+            {timeRemaining}
+          </p>
         </div>
       </div>
 
+      {/* Entry Status */}
       {hasEntered && (
-        <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-            <Check className="w-3 h-3 text-white" />
+        <div className="border-t-3 border-black p-4 bg-black text-white flex items-center gap-3">
+          <div className="w-6 h-6 bg-red-500 border-2 border-white flex items-center justify-center flex-shrink-0">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="3" d="M5 13l4 4L19 7" />
+            </svg>
           </div>
-          <p className="text-sm text-green-800 font-medium">
-            You&apos;re in! Good luck!
+          <p className="font-mono text-sm uppercase tracking-wider">
+            YOU&apos;RE IN — GOOD LUCK!
           </p>
         </div>
       )}

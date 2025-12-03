@@ -1,65 +1,102 @@
 "use client";
 
 import { useUser } from "@/contexts/user-context";
-import { User, Flame } from "lucide-react";
+import { User, DollarSign } from "lucide-react";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAccount, useReadContract } from "wagmi";
+import { env } from "@/lib/env";
+import { Address, formatUnits } from "viem";
+
+// USDC contract addresses
+const USDC_BASE_MAINNET = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const USDC_BASE_SEPOLIA = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+
+// USDC ABI for balanceOf
+const USDC_ABI = [
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "balanceOf",
+    outputs: [{ name: "", type: "uint256" }],
+    type: "function",
+    stateMutability: "view",
+  },
+] as const;
 
 export default function ProfileHeader() {
   const { user, isLoading } = useUser();
+  const { address, isConnected, chain } = useAccount();
+
+  // Get USDC contract address based on chain or env
+  const usdcAddress = (() => {
+    if (env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS) {
+      return env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS as Address;
+    }
+    return chain?.id === 8453
+      ? (USDC_BASE_MAINNET as Address)
+      : (USDC_BASE_SEPOLIA as Address);
+  })();
+
+  // Read USDC balance
+  const { data: usdcBalance, isLoading: isBalanceLoading } = useReadContract({
+    address: usdcAddress,
+    abi: USDC_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && isConnected,
+      refetchInterval: 30000, // Refresh every 30 seconds
+    },
+  });
+
+  // Format USDC balance (6 decimals)
+  const formattedBalance = usdcBalance
+    ? parseFloat(formatUnits(usdcBalance, 6)).toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      })
+    : "0";
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white/80 backdrop-blur-md">
-      {/* Left: Doctor Dunk */}
-      <div className="flex items-center gap-2 group cursor-default">
-        <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center transition-transform group-hover:rotate-12 group-hover:scale-110 duration-300">
-          <Flame className="w-5 h-5 text-primary-600" />
-        </div>
-        <h1 className="text-lg font-semibold text-gray-900 tracking-tight">Doctor Dunk</h1>
-      </div>
-
-      {/* Right: Profile */}
+    <div className="flex items-center justify-between px-4 py-3 bg-white border-b-3 border-black">
+      {/* Left: Profile Picture */}
       {isLoading ? (
-        <div className="flex items-center gap-2.5">
-          <Skeleton className="w-8 h-8 rounded-full" />
-          <div className="hidden sm:block">
-            <Skeleton className="h-4 w-24 mb-1" />
-            <Skeleton className="h-3 w-16" />
-          </div>
-        </div>
+        <Skeleton className="w-10 h-10 rounded-full border-3 border-black" />
       ) : !user || !user.data ? (
-        <div className="flex items-center gap-2.5 animate-in fade-in duration-300">
-          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-            <User className="w-4 h-4 text-gray-400" />
-          </div>
-          <span className="text-sm text-gray-500">Not signed in</span>
+        <div className="w-10 h-10 bg-white border-3 border-black shadow-brutal-sm rounded-full flex items-center justify-center">
+          <User className="w-5 h-5 text-black" />
+        </div>
+      ) : user.data.pfp_url ? (
+        <div className="relative">
+          <Image
+            src={user.data.pfp_url}
+            alt={user.data.display_name || user.data.username}
+            width={40}
+            height={40}
+            className="rounded-full border-3 border-black shadow-brutal-sm"
+          />
         </div>
       ) : (
-        <div className="flex items-center gap-2.5 animate-in slide-in-from-right-4 fade-in duration-500">
-          {user.data.pfp_url ? (
-            <div className="relative">
-              <Image
-                src={user.data.pfp_url}
-                alt={user.data.display_name || user.data.username}
-                width={32}
-                height={32}
-                className="rounded-full border border-gray-200 shadow-sm transition-transform hover:scale-110 duration-200"
-              />
-              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full animate-pop delay-300" />
-            </div>
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center shadow-sm">
-              <User className="w-4 h-4 text-primary-600" />
-            </div>
-          )}
-          <div className="min-w-0 hidden sm:block">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {user.data.display_name || user.data.username}
-            </p>
-            <p className="text-xs text-gray-500 truncate">@{user.data.username}</p>
-          </div>
+        <div className="w-10 h-10 bg-brutal-red border-3 border-black shadow-brutal-sm rounded-full flex items-center justify-center">
+          <User className="w-5 h-5 text-white" />
         </div>
       )}
+
+      {/* Right: USDC Balance */}
+      <div className="flex items-center gap-2">
+        {isBalanceLoading ? (
+          <Skeleton className="h-8 w-20 border-2 border-black" />
+        ) : (
+          <div className="flex items-center gap-1.5 bg-white border-3 border-black shadow-brutal-sm px-3 py-1.5">
+            <div className="w-6 h-6 bg-[#2775CA] rounded-full flex items-center justify-center">
+              <DollarSign className="w-4 h-4 text-white" strokeWidth={3} />
+            </div>
+            <span className="font-bebas text-xl tracking-wide text-black">
+              {formattedBalance}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

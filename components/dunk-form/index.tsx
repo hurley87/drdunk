@@ -46,39 +46,36 @@ export default function DunkForm() {
     isProtected: true,
     body: (variables) => variables,
     onSuccess: (data) => {
-      setSuccessMessage("Dunk submitted successfully!");
+      setSuccessMessage("DUNK SUBMITTED!");
       setCastUrl("");
       setDunkText("");
       setErrors({});
-      // Clear success message after 5 seconds
       setTimeout(() => setSuccessMessage(""), 5000);
     },
     onError: (error: Error & { status?: number; data?: { details?: Array<{ path: string[]; message: string }> } }) => {
       console.error("Failed to submit dunk:", error);
       
-      // Handle authentication errors
       if (error.status === 401) {
         setErrors({
-          dunkText: "Please sign in to submit a dunk.",
+          dunkText: "SIGN IN REQUIRED",
         });
         return;
       }
       
-      // Handle validation errors from API
       if (error.data?.details && Array.isArray(error.data.details)) {
         const fieldErrors: { castUrl?: string; dunkText?: string } = {};
         error.data.details.forEach((detail) => {
           const field = detail.path[0];
           if (field === "castUrl") {
-            fieldErrors.castUrl = detail.message;
+            fieldErrors.castUrl = detail.message.toUpperCase();
           } else if (field === "dunkText") {
-            fieldErrors.dunkText = detail.message;
+            fieldErrors.dunkText = detail.message.toUpperCase();
           }
         });
         setErrors(fieldErrors);
       } else {
         setErrors({
-          dunkText: error.message || "Failed to submit dunk. Please try again.",
+          dunkText: (error.message || "SUBMISSION FAILED").toUpperCase(),
         });
       }
     },
@@ -89,7 +86,6 @@ export default function DunkForm() {
     setErrors({});
     setSuccessMessage("");
 
-    // Client-side validation
     const validationResult = dunkSchema.safeParse({
       castUrl,
       dunkText,
@@ -99,9 +95,9 @@ export default function DunkForm() {
       const fieldErrors: { castUrl?: string; dunkText?: string } = {};
       validationResult.error.errors.forEach((err) => {
         if (err.path[0] === "castUrl") {
-          fieldErrors.castUrl = err.message;
+          fieldErrors.castUrl = err.message.toUpperCase();
         } else if (err.path[0] === "dunkText") {
-          fieldErrors.dunkText = err.message;
+          fieldErrors.dunkText = err.message.toUpperCase();
         }
       });
       setErrors(fieldErrors);
@@ -111,114 +107,120 @@ export default function DunkForm() {
     submitDunk({ castUrl, dunkText });
   };
 
-  // Show sign-in prompt if user is not authenticated
+  // Loading state
   if (isUserLoading) {
     return (
-      <div className="w-full max-w-2xl mx-auto p-4">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
+      <div className="w-full">
+        <div className="bg-white border-3 border-black shadow-brutal p-8 flex items-center justify-center">
+          <div className="w-8 h-8 border-3 border-black border-t-red-500 animate-spin" />
         </div>
       </div>
     );
   }
 
+  // Sign in prompt
   if (!user?.data) {
     return (
-      <div className="w-full max-w-2xl mx-auto p-4">
-        <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-          <p className="text-lg font-medium text-yellow-900 mb-4">
-            Sign in required
-          </p>
-          <p className="text-sm text-yellow-700 mb-4">
-            You need to sign in to submit a dunk.
-          </p>
-          <button
-            onClick={signIn}
-            disabled={isUserLoading}
-            className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          >
-            Sign In
-          </button>
+      <div className="w-full">
+        <div className="bg-white border-3 border-black shadow-brutal text-center">
+          <div className="p-6 border-b-3 border-black bg-stripes">
+            <p className="font-brutal text-2xl uppercase">SIGN IN REQUIRED</p>
+            <p className="font-mono text-sm text-black/60 mt-2 uppercase">
+              You need to sign in to submit a dunk
+            </p>
+          </div>
+          <div className="p-6">
+            <button
+              onClick={signIn}
+              disabled={isUserLoading}
+              className="w-full bg-red-500 text-white border-3 border-black shadow-brutal px-6 py-4 font-mono font-bold uppercase tracking-wider hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-lg active:translate-x-0 active:translate-y-0 active:shadow-none transition-all duration-100 disabled:opacity-50"
+            >
+              SIGN IN
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
+    <div className="w-full">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Cast URL Field */}
+        <div className="bg-white border-3 border-black shadow-brutal">
           <label
             htmlFor="castUrl"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="block font-mono text-xs uppercase tracking-widest p-3 border-b-3 border-black bg-black text-white"
           >
-            Cast URL
+            CAST URL
           </label>
           <input
             id="castUrl"
             type="url"
             value={castUrl}
             onChange={(e) => setCastUrl(e.target.value)}
-            placeholder="https://warpcast.com/..."
-            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-              errors.castUrl
-                ? "border-red-500"
-                : "border-gray-300"
+            placeholder="HTTPS://WARPCAST.COM/..."
+            className={`w-full px-4 py-4 font-mono text-sm bg-transparent border-0 focus:outline-none focus:ring-0 placeholder:text-black/30 uppercase ${
+              errors.castUrl ? "bg-red-50" : ""
             }`}
             disabled={isPending}
           />
           {errors.castUrl && (
-            <p className="mt-1 text-sm text-red-600">{errors.castUrl}</p>
+            <div className="px-4 py-2 bg-red-500 text-white font-mono text-xs uppercase">
+              {errors.castUrl}
+            </div>
           )}
         </div>
 
-        <div>
+        {/* Dunk Text Field */}
+        <div className="bg-white border-3 border-black shadow-brutal rotate-[0.3deg]">
           <label
             htmlFor="dunkText"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="block font-mono text-xs uppercase tracking-widest p-3 border-b-3 border-black bg-red-500 text-white"
           >
-            Dunk
+            YOUR DUNK
           </label>
           <textarea
             id="dunkText"
             value={dunkText}
             onChange={(e) => setDunkText(e.target.value)}
-            placeholder="Enter your dunk here..."
-            rows={6}
-            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none ${
-              errors.dunkText
-                ? "border-red-500"
-                : "border-gray-300"
+            placeholder="ENTER YOUR SPICIEST TAKE..."
+            rows={5}
+            className={`w-full px-4 py-4 font-mono text-sm bg-transparent border-0 focus:outline-none focus:ring-0 placeholder:text-black/30 resize-none ${
+              errors.dunkText ? "bg-red-50" : ""
             }`}
             disabled={isPending}
           />
           {errors.dunkText && (
-            <p className="mt-1 text-sm text-red-600">{errors.dunkText}</p>
+            <div className="px-4 py-2 bg-red-500 text-white font-mono text-xs uppercase">
+              {errors.dunkText}
+            </div>
           )}
         </div>
 
+        {/* Success Message */}
         {successMessage && (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-800">{successMessage}</p>
+          <div className="bg-black text-white border-3 border-black p-4 -rotate-1">
+            <p className="font-brutal text-xl uppercase text-center">{successMessage}</p>
           </div>
         )}
 
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={isPending}
-          className="w-full px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center space-x-2 min-h-[48px]"
+          className="w-full bg-black text-white border-3 border-black shadow-brutal-lg px-6 py-5 font-brutal text-2xl uppercase hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-xl active:translate-x-0 active:translate-y-0 active:shadow-brutal transition-all duration-100 disabled:opacity-50 flex items-center justify-center gap-3"
         >
           {isPending ? (
             <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-              <span>Submitting...</span>
+              <div className="w-6 h-6 border-3 border-white border-t-transparent animate-spin" />
+              <span>SUBMITTING...</span>
             </>
           ) : (
-            "Submit Dunk"
+            "SUBMIT DUNK"
           )}
         </button>
       </form>
     </div>
   );
 }
-

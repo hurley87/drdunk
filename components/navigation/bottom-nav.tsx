@@ -9,18 +9,21 @@ import { useSound } from "@/hooks/use-sound";
 const navItems = [
   {
     href: "/",
-    label: "Daily Dunk",
+    label: "DAILY",
     icon: Trophy,
+    rotation: "-rotate-2",
   },
   {
     href: "/create",
-    label: "Create",
+    label: "CREATE",
     icon: Plus,
+    rotation: "rotate-1",
   },
   {
     href: "/players",
-    label: "Players",
+    label: "PLAYERS",
     icon: Users,
+    rotation: "-rotate-1",
   },
 ];
 
@@ -29,9 +32,9 @@ export default function BottomNav() {
   const { play } = useSound();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-inset-bottom shadow-lg">
-      <div className="flex items-center justify-around h-16">
-        {navItems.map((item) => {
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t-3 border-black z-50">
+      <div className="flex items-stretch h-20">
+        {navItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
 
@@ -41,32 +44,28 @@ export default function BottomNav() {
               href={item.href}
               onClick={() => play("click")}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 h-full min-h-[44px] transition-all duration-200 active:scale-95",
+                "flex flex-col items-center justify-center flex-1 min-h-[48px] transition-all duration-75 border-r-3 border-black last:border-r-0",
                 isActive
-                  ? "text-primary-600"
-                  : "text-gray-500 hover:text-gray-700 active:text-primary-500"
+                  ? "bg-brutal-red text-white"
+                  : "bg-white text-black hover:bg-black hover:text-white active:bg-brutal-red active:text-white"
               )}
             >
               <div className={cn(
-                "relative transition-transform duration-300",
-                isActive && "scale-110 -translate-y-0.5"
+                "relative transition-transform duration-75",
+                isActive ? "scale-110" : item.rotation,
+                !isActive && "group-hover:rotate-0"
               )}>
-                <Icon
-                  className={cn(
-                    "w-5 h-5 mb-1",
-                    isActive && "text-primary-600 drop-shadow-sm"
-                  )}
-                />
-                {isActive && (
-                  <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-primary-500 rounded-full animate-pop" />
-                )}
+                <Icon className="w-6 h-6 mb-1" />
               </div>
               <span className={cn(
-                "text-xs transition-all",
-                isActive ? "font-medium text-primary-600" : "font-normal"
+                "font-bebas text-sm tracking-wider",
+                isActive && "underline underline-offset-4 decoration-2"
               )}>
                 {item.label}
               </span>
+              {isActive && (
+                <div className="absolute top-1 right-1 w-2 h-2 bg-white border border-black transform rotate-45" />
+              )}
             </Link>
           );
         })}

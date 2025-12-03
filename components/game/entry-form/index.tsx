@@ -12,7 +12,7 @@ import { env } from "@/lib/env";
 import { ConfirmationDialog } from "./confirmation-dialog";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, ExternalLink, Check, Trophy } from "lucide-react";
+import { Loader2, Search, ExternalLink, Check, Trophy, Zap } from "lucide-react";
 import { useApiQuery } from "@/hooks/use-api-query";
 import type { NeynarCast } from "@/lib/neynar";
 import { useSound } from "@/hooks/use-sound";
@@ -453,21 +453,21 @@ export default function EntryForm() {
   // Show sign-in prompt if user is not authenticated
   if (isUserLoading) {
     return (
-      <div className="flex items-center justify-center py-12 animate-pulse">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
       </div>
     );
   }
 
   if (!user?.data) {
     return (
-      <div className="text-center py-8 animate-in fade-in zoom-in duration-300">
-        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4 animate-bounce">
+      <div className="text-center py-8">
+        <div className="w-16 h-16 bg-black border-3 border-black flex items-center justify-center mx-auto mb-4 transform -rotate-6 animate-brutal-bounce">
           <span className="text-2xl">🔐</span>
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Sign in required</h3>
-        <p className="text-sm text-gray-500 mb-6">
-          You need to sign in to enter the game.
+        <h3 className="font-brutal text-2xl text-black mb-2 uppercase">SIGN IN REQUIRED</h3>
+        <p className="font-mono text-xs text-black/60 mb-6 uppercase tracking-wide">
+          YOU NEED TO SIGN IN TO ENTER THE GAME
         </p>
         <Button
           onClick={() => {
@@ -475,9 +475,8 @@ export default function EntryForm() {
             signIn();
           }}
           disabled={isUserLoading}
-          className="bg-primary-500 hover:bg-primary-600 text-white"
         >
-          Sign In with Farcaster
+          SIGN IN WITH FARCASTER
         </Button>
       </div>
     );
@@ -498,18 +497,18 @@ export default function EntryForm() {
     <div className="w-full max-w-full overflow-hidden relative">
       <Confetti isActive={showConfetti} />
       
-      <form onSubmit={handleSubmit} className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        {/* Parent Cast URL Field - Required */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Parent Cast URL Field - Brutalist */}
         <div>
           <label
             htmlFor="parentCastUrl"
-            className="block text-sm font-medium text-gray-900 mb-2"
+            className="block font-brutal text-xl text-black mb-3 uppercase tracking-wider"
           >
-            Reply to Cast
+            REPLY TO CAST
           </label>
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/40 pointer-events-none" />
               <input
                 id="parentCastUrl"
                 type="text"
@@ -525,12 +524,12 @@ export default function EntryForm() {
                     handleCastLookup();
                   }
                 }}
-                placeholder="Search by cast URL or hash"
+                placeholder="SEARCH BY CAST URL OR HASH"
                 className={cn(
-                  "w-full pl-11 pr-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm",
+                  "w-full pl-12 pr-4 py-4 bg-white border-3 font-mono text-sm uppercase tracking-wide placeholder:text-black/30 focus:outline-none transition-all duration-75",
                   errors.parentCastUrl 
-                    ? "border-red-300 focus:ring-red-500 animate-shake" 
-                    : "border-gray-200"
+                    ? "border-red-500 shadow-brutal-red animate-shake" 
+                    : "border-black shadow-brutal-sm focus:shadow-brutal focus:translate-x-[-2px] focus:translate-y-[-2px]"
                 )}
                 disabled={isLoading || isLookingUpCast}
               />
@@ -539,109 +538,111 @@ export default function EntryForm() {
               type="button"
               onClick={handleCastLookup}
               disabled={isLoading || isLookingUpCast || !parentCastUrl.trim()}
-              className="px-4 bg-primary-500 hover:bg-primary-600 text-white"
+              variant="outline"
+              className="h-auto py-4 px-6"
             >
               {isLookingUpCast ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                "Lookup"
+                "LOOKUP"
               )}
             </Button>
           </div>
           {errors.parentCastUrl && (
-            <p className="mt-1.5 text-sm text-red-600 animate-in slide-in-from-top-1 fade-in duration-200">{errors.parentCastUrl}</p>
+            <p className="mt-2 font-mono text-xs text-red-500 uppercase tracking-wide">{errors.parentCastUrl}</p>
           )}
           {isLookingUpCast && (
-            <p className="mt-1.5 text-sm text-gray-500 animate-pulse">Looking up cast...</p>
+            <p className="mt-2 font-mono text-xs text-black/60 uppercase tracking-wide animate-pulse">LOOKING UP CAST...</p>
           )}
         </div>
 
-        {/* Cast Preview */}
+        {/* Cast Preview - Brutalist */}
         {selectedCast && (
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 animate-in fade-in zoom-in-95 duration-300">
-            <div className="flex items-start gap-3">
+          <div className="border-3 border-black bg-white p-4 shadow-brutal-sm transform -rotate-1">
+            <div className="flex items-start gap-4">
               <img
                 src={selectedCast.author.pfp_url || "/images/icon.png"}
                 alt={selectedCast.author.display_name}
-                className="w-10 h-10 rounded-full shadow-sm"
+                className="w-12 h-12 border-3 border-black"
               />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-gray-900">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-brutal text-lg uppercase tracking-wide text-black">
                     {selectedCast.author.display_name}
                   </span>
-                  <span className="text-sm text-gray-500">
+                  <span className="font-mono text-xs text-black/60 uppercase">
                     @{selectedCast.author.username}
                   </span>
-                  <Check className="w-4 h-4 text-green-500 flex-shrink-0 animate-pop" />
+                  <Check className="w-5 h-5 text-red-500 flex-shrink-0" />
                 </div>
-                <p className="text-sm text-gray-700 mb-2 whitespace-pre-wrap break-words">
+                <p className="font-mono text-sm text-black mb-3 whitespace-pre-wrap break-words">
                   {selectedCast.text}
                 </p>
-                <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <span>{selectedCast.reactions.likes_count} likes</span>
-                  <span>{selectedCast.reactions.recasts_count} recasts</span>
-                  <span>{selectedCast.replies.count} replies</span>
+                <div className="flex items-center gap-4 font-mono text-xs text-black/60 uppercase tracking-wide">
+                  <span>{selectedCast.reactions.likes_count} LIKES</span>
+                  <span>{selectedCast.reactions.recasts_count} RECASTS</span>
+                  <span>{selectedCast.replies.count} REPLIES</span>
                 </div>
                 <a
                   href={`https://warpcast.com/${selectedCast.author.username}/${selectedCast.hash}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 mt-2 text-xs text-primary-600 hover:text-primary-700 hover:underline"
+                  className="inline-flex items-center gap-1 mt-3 font-mono text-xs text-red-500 hover:underline uppercase tracking-wide"
                 >
-                  View cast <ExternalLink className="w-3 h-3" />
+                  VIEW CAST <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
             </div>
           </div>
         )}
 
-        {/* Dunk Text Field */}
-        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
+        {/* Dunk Text Field - Brutalist */}
+        <div>
           <label
             htmlFor="dunkText"
-            className="block text-sm font-medium text-gray-900 mb-2"
+            className="block font-brutal text-xl text-black mb-3 uppercase tracking-wider"
           >
-            Your Dunk
+            YOUR DUNK
           </label>
           <textarea
             id="dunkText"
             value={dunkText}
             onChange={(e) => setDunkText(e.target.value)}
-            placeholder={selectedCast ? "Write something that will get engagement..." : "Please select a cast first..."}
+            placeholder={selectedCast ? "WRITE SOMETHING THAT WILL GET ENGAGEMENT..." : "PLEASE SELECT A CAST FIRST..."}
             rows={4}
             className={cn(
-              "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none transition-all duration-200 text-sm",
+              "w-full px-4 py-4 bg-white border-3 font-mono text-sm uppercase tracking-wide placeholder:text-black/30 resize-none focus:outline-none transition-all duration-75",
               errors.dunkText 
-                ? "border-red-300 focus:ring-red-500 animate-shake" 
+                ? "border-red-500 shadow-brutal-red animate-shake" 
                 : selectedCast
-                ? "border-gray-200"
-                : "border-gray-200 bg-gray-50"
+                ? "border-black shadow-brutal-sm focus:shadow-brutal focus:translate-x-[-2px] focus:translate-y-[-2px]"
+                : "border-black/30 bg-black/5"
             )}
             disabled={isLoading || !selectedCast}
           />
-          <div className="flex items-center justify-between gap-2 mt-1.5">
+          <div className="flex items-center justify-between gap-2 mt-2">
             <div className="flex-1 min-w-0">
               {errors.dunkText ? (
-                <p className="text-sm text-red-600 animate-in slide-in-from-top-1 fade-in duration-200">{errors.dunkText}</p>
+                <p className="font-mono text-xs text-red-500 uppercase tracking-wide">{errors.dunkText}</p>
               ) : !selectedCast ? (
-                <p className="text-xs text-gray-500">Select a cast above to continue</p>
+                <p className="font-mono text-xs text-black/60 uppercase tracking-wide">SELECT A CAST ABOVE TO CONTINUE</p>
               ) : (
-                <p className="text-xs text-gray-500">Higher engagement = better chance to win</p>
+                <p className="font-mono text-xs text-black/60 uppercase tracking-wide">HIGHER ENGAGEMENT = BETTER CHANCE TO WIN</p>
               )}
             </div>
-            <p className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap transition-colors duration-200" style={{
-              color: dunkText.length > 280 ? 'rgb(220 38 38)' : undefined
-            }}>{dunkText.length} chars</p>
+            <p className={cn(
+              "font-mono text-xs uppercase tracking-wide flex-shrink-0",
+              dunkText.length > 280 ? 'text-red-500 font-bold' : 'text-black/40'
+            )}>{dunkText.length} CHARS</p>
           </div>
         </div>
 
-        {/* Wallet Connection Warning */}
+        {/* Wallet Connection Warning - Brutalist */}
         {!isConnected && (
-          <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 animate-pulse">
+          <div className="border-3 border-black bg-red-500 p-4 shadow-brutal animate-brutal-pulse">
             <div className="flex items-center justify-between gap-4">
-              <p className="text-sm text-amber-800">
-                Please connect your wallet to enter the game.
+              <p className="font-mono text-sm text-white uppercase tracking-wide">
+                PLEASE CONNECT YOUR WALLET TO ENTER THE GAME
               </p>
               {connectors.length > 0 && (
                 <Button
@@ -662,15 +663,16 @@ export default function EntryForm() {
                     }
                   }}
                   disabled={isConnecting}
-                  className="bg-amber-600 hover:bg-amber-700 text-white text-sm px-4 py-2 shadow-sm"
+                  variant="outline"
+                  className="bg-white text-black border-black"
                 >
                   {isConnecting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Connecting...
+                      CONNECTING...
                     </>
                   ) : (
-                    "Connect Wallet"
+                    "CONNECT WALLET"
                   )}
                 </Button>
               )}
@@ -680,64 +682,64 @@ export default function EntryForm() {
 
         {/* Transaction Status */}
         {step !== "form" && step !== "success" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <TransactionStatus 
-              step={getTransactionStep()}
-              txHash={enterHash || approveHash}
-            />
-          </div>
+          <TransactionStatus 
+            step={getTransactionStep()}
+            txHash={enterHash || approveHash}
+          />
         )}
 
-        {/* Error Message */}
+        {/* Error Message - Brutalist */}
         {errors.payment && (
-          <div className="rounded-lg bg-red-50 border border-red-200 p-4 animate-in fade-in slide-in-from-bottom-2 duration-300 animate-shake">
-            <p className="text-sm text-red-800">{errors.payment}</p>
+          <div className="border-3 border-black bg-red-500 p-4 shadow-brutal animate-shake">
+            <p className="font-mono text-sm text-white uppercase tracking-wide">{errors.payment}</p>
           </div>
         )}
 
-        {/* Success Message */}
+        {/* Success Message - Brutalist */}
         {successMessage && (
-          <div className="rounded-lg bg-green-50 border border-green-200 p-4 animate-in fade-in zoom-in duration-500">
+          <div className="border-3 border-black bg-black p-4 shadow-brutal-red">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 animate-pop">
-                <Trophy className="w-4 h-4 text-green-600" />
+              <div className="w-10 h-10 bg-red-500 border-2 border-white flex items-center justify-center flex-shrink-0 transform rotate-6">
+                <Trophy className="w-5 h-5 text-white" />
               </div>
-              <p className="text-sm text-green-800 font-medium">{successMessage}</p>
+              <p className="font-mono text-sm text-white uppercase tracking-wide">{successMessage}</p>
             </div>
           </div>
         )}
 
-        {/* Entry Fee Info */}
-        <div className="rounded-lg bg-gray-50 border border-gray-200 p-4 transition-all hover:bg-gray-100">
+        {/* Entry Fee Info - Brutalist */}
+        <div className="border-3 border-black bg-white p-4 shadow-brutal-sm transform rotate-1 hover:rotate-0 transition-transform duration-75">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Entry Fee</span>
-            <span className="text-sm font-semibold text-gray-900">
+            <span className="font-mono text-xs text-black/60 uppercase tracking-wider">ENTRY FEE</span>
+            <span className="font-brutal text-xl text-black">
               {isLoadingEntryFee ? "..." : `${entryFeeFormatted} USDC`}
             </span>
           </div>
-          <p className="text-xs text-gray-500">
-            90% goes to prize pool • One entry per day • Highest engagement wins
+          <p className="font-mono text-[10px] text-black/60 uppercase tracking-wider">
+            90% GOES TO PRIZE POOL • ONE ENTRY PER DAY • HIGHEST ENGAGEMENT WINS
           </p>
         </div>
 
-        {/* Submit Button */}
+        {/* Submit Button - Brutalist */}
         <Button
           type="submit"
           disabled={isLoading || !isConnected || !selectedCast}
-          className="w-full h-12 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-all disabled:opacity-50 shadow-md hover:shadow-lg active:scale-[0.98]"
+          className="w-full h-14"
+          size="lg"
         >
           {isLoading ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              <Loader2 className="w-5 h-5 animate-spin mr-2" />
               <span>
-                {step === "approve" ? "Approving..." : 
-                 step === "pay" ? "Processing..." : 
-                 step === "submit" ? "Submitting..." : "Processing..."}
+                {step === "approve" ? "APPROVING..." : 
+                 step === "pay" ? "PROCESSING..." : 
+                 step === "submit" ? "SUBMITTING..." : "PROCESSING..."}
               </span>
             </>
           ) : (
-            <span>
-              Enter Game{!isLoadingEntryFee && ` • ${entryFeeFormatted} USDC`}
+            <span className="flex items-center gap-2">
+              <Zap className="w-5 h-5" />
+              ENTER GAME{!isLoadingEntryFee && ` • ${entryFeeFormatted} USDC`}
             </span>
           )}
         </Button>

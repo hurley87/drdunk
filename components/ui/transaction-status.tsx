@@ -1,7 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Check, Loader2, ExternalLink, AlertCircle, Wallet, FileCheck, Rocket } from "lucide-react";
+import { Check, Loader2, ExternalLink, AlertCircle, Wallet, FileCheck, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type TransactionStep = "idle" | "approving" | "approved" | "paying" | "confirming" | "confirmed" | "success" | "error";
@@ -13,9 +12,9 @@ interface TransactionStatusProps {
 }
 
 const steps = [
-  { key: "approving", label: "Approving USDC", icon: Wallet },
-  { key: "paying", label: "Entering Game", icon: Rocket },
-  { key: "confirming", label: "Confirming", icon: FileCheck },
+  { key: "approving", label: "APPROVING USDC", icon: Wallet },
+  { key: "paying", label: "ENTERING GAME", icon: Zap },
+  { key: "confirming", label: "CONFIRMING", icon: FileCheck },
 ];
 
 export function TransactionStatus({ step, txHash, error }: TransactionStatusProps) {
@@ -42,84 +41,54 @@ export function TransactionStatus({ step, txHash, error }: TransactionStatusProp
   const hasError = step === "error";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
       className={cn(
-        "rounded-xl p-4 border",
+        "p-4 border-3 border-black shadow-brutal transform -rotate-1",
         isComplete 
-          ? "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200" 
+          ? "bg-black text-white" 
           : hasError
-          ? "bg-gradient-to-br from-red-50 to-rose-50 border-red-200"
-          : "bg-gradient-to-br from-primary-50 to-amber-50 border-primary-200"
+          ? "bg-red-500 text-white"
+          : "bg-white text-black"
       )}
     >
-      {/* Progress Steps */}
+      {/* Progress Steps - Brutalist */}
       <div className="flex items-center justify-between mb-4">
         {steps.map((s, index) => {
           const Icon = s.icon;
           const isPast = index < currentStepIndex;
           const isCurrent = index === currentStepIndex;
-          const isFuture = index > currentStepIndex;
 
           return (
             <div key={s.key} className="flex items-center flex-1">
-              <motion.div
-                initial={{ scale: 0.8 }}
-                animate={{ 
-                  scale: isCurrent ? 1.1 : 1,
-                  backgroundColor: isPast || isComplete 
-                    ? "rgb(34 197 94)" 
-                    : isCurrent 
-                    ? "rgb(249 115 22)" 
-                    : "rgb(229 231 235)",
-                }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              <div
                 className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center relative",
-                  (isPast || isComplete) && "shadow-lg shadow-green-500/30",
-                  isCurrent && "shadow-lg shadow-primary-500/30"
+                  "w-12 h-12 border-3 border-black flex items-center justify-center transform",
+                  isPast || isComplete 
+                    ? "bg-black text-white rotate-3" 
+                    : isCurrent 
+                    ? "bg-red-500 text-white -rotate-3 animate-brutal-pulse" 
+                    : "bg-white text-black/30 rotate-1"
                 )}
               >
                 {isPast || isComplete ? (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 500 }}
-                  >
-                    <Check className="w-5 h-5 text-white" />
-                  </motion.div>
+                  <Check className="w-6 h-6" />
                 ) : isCurrent ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                  >
-                    <Loader2 className="w-5 h-5 text-white" />
-                  </motion.div>
+                  <Loader2 className="w-6 h-6 animate-spin" />
                 ) : (
-                  <Icon className="w-5 h-5 text-gray-400" />
+                  <Icon className="w-6 h-6" />
                 )}
+              </div>
 
-                {/* Pulse effect for current step */}
-                {isCurrent && (
-                  <motion.div
-                    animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
-                    className="absolute inset-0 rounded-full bg-primary-500"
-                  />
-                )}
-              </motion.div>
-
-              {/* Connector line */}
+              {/* Connector line - Brutalist */}
               {index < steps.length - 1 && (
-                <div className="flex-1 h-1 mx-2 rounded-full overflow-hidden bg-gray-200">
-                  <motion.div
-                    initial={{ width: "0%" }}
-                    animate={{ 
-                      width: isPast || (isCurrent && step.includes("ed")) ? "100%" : "0%"
-                    }}
-                    transition={{ duration: 0.5 }}
-                    className="h-full bg-gradient-to-r from-green-500 to-primary-500"
+                <div className="flex-1 h-1 mx-2 bg-black/20">
+                  <div
+                    className={cn(
+                      "h-full transition-all duration-300",
+                      isPast || (isCurrent && step.includes("ed")) 
+                        ? "bg-black w-full" 
+                        : "bg-transparent w-0"
+                    )}
                   />
                 </div>
               )}
@@ -128,50 +97,46 @@ export function TransactionStatus({ step, txHash, error }: TransactionStatusProp
         })}
       </div>
 
-      {/* Status Text */}
+      {/* Status Text - Brutalist */}
       <div className="text-center">
-        <motion.p
-          key={step}
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
+        <p
           className={cn(
-            "text-sm font-medium",
-            isComplete ? "text-green-700" : hasError ? "text-red-700" : "text-primary-700"
+            "font-brutal text-xl uppercase tracking-wider",
+            isComplete ? "text-white" : hasError ? "text-white" : "text-black"
           )}
         >
-          {isComplete && "🎉 Transaction Complete!"}
-          {hasError && "❌ Transaction Failed"}
-          {step === "approving" && "Waiting for USDC approval..."}
-          {step === "approved" && "USDC approved! Processing payment..."}
-          {step === "paying" && "Processing game entry..."}
-          {step === "confirming" && "Confirming on blockchain..."}
-          {step === "confirmed" && "Payment confirmed!"}
-        </motion.p>
+          {isComplete && "TRANSACTION COMPLETE!"}
+          {hasError && "TRANSACTION FAILED"}
+          {step === "approving" && "WAITING FOR USDC APPROVAL..."}
+          {step === "approved" && "USDC APPROVED! PROCESSING..."}
+          {step === "paying" && "PROCESSING GAME ENTRY..."}
+          {step === "confirming" && "CONFIRMING ON BLOCKCHAIN..."}
+          {step === "confirmed" && "PAYMENT CONFIRMED!"}
+        </p>
 
         {txHash && (
-          <motion.a
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          <a
             href={`https://basescan.org/tx/${txHash}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 mt-2 text-xs text-gray-500 hover:text-primary-600 transition-colors"
+            className={cn(
+              "inline-flex items-center gap-1 mt-3 font-mono text-xs uppercase tracking-wider transition-colors",
+              isComplete 
+                ? "text-white/60 hover:text-white" 
+                : "text-black/60 hover:text-red-500"
+            )}
           >
-            View transaction <ExternalLink className="w-3 h-3" />
-          </motion.a>
+            VIEW TRANSACTION <ExternalLink className="w-3 h-3" />
+          </a>
         )}
 
         {error && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center justify-center gap-1 mt-2 text-xs text-red-600"
-          >
-            <AlertCircle className="w-3 h-3" />
+          <div className="flex items-center justify-center gap-2 mt-3 font-mono text-xs text-white uppercase tracking-wide">
+            <AlertCircle className="w-4 h-4" />
             {error}
-          </motion.div>
+          </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

@@ -4,7 +4,7 @@ import { useApiQuery } from "@/hooks/use-api-query";
 import { formatTimeRemaining, getTimeRemaining } from "@/lib/game-utils";
 import { useEffect, useState } from "react";
 import { LeaderboardSkeleton } from "@/components/ui/skeletons";
-import { ExternalLink, Crown } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LeaderboardEntry {
@@ -56,9 +56,9 @@ export default function Leaderboard() {
 
   if (error) {
     return (
-      <div className="rounded-lg bg-red-50 border border-red-200 p-4 animate-in fade-in slide-in-from-bottom-2">
-        <p className="text-sm text-red-800">
-          Failed to load leaderboard. Please try again.
+      <div className="border-3 border-black bg-red-500 p-4 shadow-brutal">
+        <p className="font-mono text-sm text-white uppercase tracking-wide">
+          FAILED TO LOAD LEADERBOARD. PLEASE TRY AGAIN.
         </p>
       </div>
     );
@@ -68,75 +68,96 @@ export default function Leaderboard() {
 
   return (
     <div className="w-full">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Today&apos;s Leaderboard</h2>
+        <h2 className="font-brutal text-2xl md:text-3xl uppercase">TODAY&apos;S BOARD</h2>
         {timeRemaining && (
-          <span className="text-xs text-gray-500 animate-in fade-in duration-500">
-            Ends in <span className="font-medium text-primary-600 tabular-nums">{timeRemaining}</span>
+          <span className="font-mono text-xs uppercase bg-black text-white px-3 py-1">
+            {timeRemaining}
           </span>
         )}
       </div>
 
       {leaderboard.length === 0 ? (
-        <div className="py-12 text-center border-2 border-dashed border-gray-200 rounded-lg animate-in fade-in zoom-in-95 duration-500">
-          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 animate-bounce">
-            <Crown className="w-6 h-6 text-gray-400" />
+        <div className="bg-white border-3 border-black border-dashed p-8 text-center">
+          <div className="w-16 h-16 bg-black mx-auto mb-4 flex items-center justify-center rotate-3">
+            <span className="font-brutal text-3xl text-white">?</span>
           </div>
-          <p className="text-sm font-medium text-gray-900 mb-1">No entries yet</p>
-          <p className="text-xs text-gray-500">Be the first to enter and claim the pot!</p>
+          <p className="font-brutal text-xl uppercase mb-1">NO ENTRIES YET</p>
+          <p className="font-mono text-xs text-black/60 uppercase">Be the first to claim the pot!</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {leaderboard.map((entry, index) => {
             const isWinning = entry.rank === 1;
+            const rotation = index % 2 === 0 ? "rotate-[0.5deg]" : "rotate-[-0.5deg]";
 
             return (
               <div
                 key={entry.castHash}
                 className={cn(
-                  "p-4 rounded-lg border transition-all duration-200 animate-in slide-in-from-bottom-2 fade-in fill-mode-backwards",
+                  "border-3 border-black transition-all duration-100",
+                  rotation,
                   isWinning
-                    ? "bg-primary-50 border-primary-200 shadow-sm scale-[1.02]"
-                    : "bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm hover:translate-x-1"
+                    ? "bg-red-500 text-white shadow-brutal-lg scale-[1.02] -rotate-1"
+                    : "bg-white shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-lg"
                 )}
-                style={{ animationDelay: `${index * 100}ms` }}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 p-4">
                   {/* Rank Badge */}
                   <div
                     className={cn(
-                      "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-transform",
+                      "flex-shrink-0 w-10 h-10 flex items-center justify-center font-brutal text-2xl border-3",
                       isWinning
-                        ? "bg-primary-500 text-white animate-pop"
-                        : "bg-gray-100 text-gray-600"
+                        ? "bg-white text-red-500 border-white"
+                        : "bg-black text-white border-black"
                     )}
                   >
-                    {isWinning ? <Crown className="w-4 h-4" /> : `#${entry.rank}`}
+                    {entry.rank}
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs text-gray-500">FID {entry.fid}</span>
+                      <span className={cn(
+                        "font-mono text-[10px] uppercase tracking-wider",
+                        isWinning ? "text-white/70" : "text-black/60"
+                      )}>
+                        FID {entry.fid}
+                      </span>
                       {isWinning && (
-                        <span className="badge badge-primary animate-pulse">Leading</span>
+                        <span className="bg-white text-red-500 px-2 py-0.5 font-mono text-[10px] uppercase font-bold">
+                          LEADING
+                        </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-800 mb-2 line-clamp-2">{entry.dunkText}</p>
+                    <p className={cn(
+                      "font-mono text-sm mb-2 line-clamp-2",
+                      isWinning ? "text-white" : "text-black"
+                    )}>
+                      {entry.dunkText}
+                    </p>
 
                     {/* Stats */}
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span className="transition-colors hover:text-gray-900">
-                        <span className="font-medium text-gray-700">{entry.likes}</span> likes
+                    <div className={cn(
+                      "flex items-center gap-3 font-mono text-[10px] uppercase",
+                      isWinning ? "text-white/70" : "text-black/60"
+                    )}>
+                      <span>
+                        <span className={cn("font-bold", isWinning ? "text-white" : "text-black")}>{entry.likes}</span> LIKES
                       </span>
-                      <span className="transition-colors hover:text-gray-900">
-                        <span className="font-medium text-gray-700">{entry.recasts}</span> recasts
+                      <span>
+                        <span className={cn("font-bold", isWinning ? "text-white" : "text-black")}>{entry.recasts}</span> RECASTS
                       </span>
-                      <span className="transition-colors hover:text-gray-900">
-                        <span className="font-medium text-gray-700">{entry.replies}</span> replies
+                      <span>
+                        <span className={cn("font-bold", isWinning ? "text-white" : "text-black")}>{entry.replies}</span> REPLIES
                       </span>
-                      <span className="ml-auto font-semibold text-primary-600">
-                        {entry.engagementScore.toFixed(0)} pts
+                      <span className={cn(
+                        "ml-auto font-bold",
+                        isWinning ? "text-white" : "text-red-500"
+                      )}>
+                        {entry.engagementScore.toFixed(0)} PTS
                       </span>
                     </div>
                   </div>
@@ -147,9 +168,14 @@ export default function Leaderboard() {
                       href={entry.castUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-shrink-0 p-2 text-gray-400 hover:text-primary-600 transition-colors hover:scale-110 active:scale-95"
+                      className={cn(
+                        "flex-shrink-0 w-10 h-10 flex items-center justify-center border-3 transition-all duration-100",
+                        isWinning
+                          ? "border-white text-white hover:bg-white hover:text-red-500"
+                          : "border-black text-black hover:bg-black hover:text-white"
+                      )}
                     >
-                      <ExternalLink className="w-4 h-4" />
+                      <ExternalLink className="w-5 h-5" />
                     </a>
                   )}
                 </div>

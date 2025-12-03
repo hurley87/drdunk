@@ -2,8 +2,8 @@
 
 import { useApiQuery } from "@/hooks/use-api-query";
 import { WinnerCardSkeleton } from "@/components/ui/skeletons";
-import { Trophy, ExternalLink, Crown, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { ExternalLink } from "lucide-react";
 
 interface Round {
   id: number;
@@ -40,15 +40,11 @@ export default function PastWinners() {
 
   if (error) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="rounded-xl bg-red-50 border border-red-200 p-4"
-      >
-        <p className="text-sm text-red-800">
-          Failed to load past winners. Please try again.
+      <div className="bg-brutal-red border-3 border-black shadow-brutal p-4">
+        <p className="font-mono text-sm text-white uppercase tracking-wide">
+          ERROR: FAILED TO LOAD PAST WINNERS
         </p>
-      </motion.div>
+      </div>
     );
   }
 
@@ -56,99 +52,91 @@ export default function PastWinners() {
 
   if (rounds.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="py-10 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gradient-to-br from-gray-50 to-white"
-      >
-        <motion.div
-          animate={{ y: [0, -5, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-100 to-yellow-100 flex items-center justify-center mx-auto mb-4"
-        >
-          <Crown className="w-8 h-8 text-amber-500" />
-        </motion.div>
-        <p className="text-sm font-medium text-gray-900 mb-1">No completed rounds yet</p>
-        <p className="text-xs text-gray-500">Come back tomorrow to see winners!</p>
-      </motion.div>
+      <div className="bg-white border-3 border-black border-dashed p-8 text-center">
+        <div className="w-16 h-16 bg-black mx-auto mb-4 flex items-center justify-center transform rotate-6">
+          <span className="font-bebas text-3xl text-white">?</span>
+        </div>
+        <p className="font-bebas text-2xl uppercase mb-1">NO COMPLETED ROUNDS</p>
+        <p className="font-mono text-xs text-black/60 uppercase tracking-wide">CHECK BACK TOMORROW!</p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      <AnimatePresence>
-        {rounds.map((round, index) => (
-          <motion.div
-            key={round.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ scale: 1.01, y: -2 }}
-            className="p-4 bg-gradient-to-r from-white to-amber-50/30 border border-gray-200 rounded-xl hover:border-amber-200 hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer"
-          >
-            <div className="flex items-center gap-3">
-              {/* Winner Badge */}
-              <motion.div
-                whileHover={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 0.5 }}
-                className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/30"
-              >
-                <Trophy className="w-6 h-6 text-white" />
-              </motion.div>
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="font-bebas text-2xl uppercase tracking-wider">PAST WINS</h2>
+        <span className="bg-black text-white px-3 py-1 font-mono text-xs uppercase tracking-wider">
+          {rounds.length} ROUNDS
+        </span>
+      </div>
 
-              {/* Winner Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-bold text-gray-900">
-                    Round #{round.id}
-                  </span>
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+      {/* Winners List */}
+      <div className="space-y-3">
+        {rounds.map((round, index) => {
+          const rotations = ['-rotate-1', 'rotate-1', '-rotate-0.5', 'rotate-0.5'];
+          const rotation = rotations[index % rotations.length];
+          
+          return (
+            <div
+              key={round.id}
+              className={cn(
+                "bg-white border-3 border-black shadow-brutal transition-all duration-75 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-lg transform",
+                rotation
+              )}
+            >
+              <div className="flex items-center gap-3 p-4">
+                {/* Round Badge */}
+                <div className="flex-shrink-0 w-14 h-14 bg-black text-white flex flex-col items-center justify-center transform -rotate-3">
+                  <span className="font-mono text-[10px] uppercase tracking-wider">RND</span>
+                  <span className="font-bebas text-xl leading-none">#{round.id}</span>
+                </div>
+
+                {/* Winner Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-bebas text-lg uppercase tracking-wide">
+                      FID {round.winner_fid}
+                    </span>
+                    <span className="bg-brutal-red text-white px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider">
+                      WINNER
+                    </span>
+                  </div>
+                  <p className="font-mono text-xs text-black/60 uppercase tracking-wider">
                     {new Date(round.date).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
-                    })}
-                  </span>
+                      year: "numeric",
+                    }).toUpperCase()}
+                  </p>
                 </div>
-                <div className="flex items-center gap-3 text-xs">
-                  <span className="text-gray-500">
-                    Winner: <span className="font-medium text-gray-700">FID {round.winner_fid}</span>
-                  </span>
+
+                {/* Prize Amount */}
+                <div className="text-right">
+                  <p className="font-bebas text-2xl text-brutal-red">
+                    {round.pot_amount.toFixed(1)}
+                  </p>
+                  <p className="font-mono text-[10px] text-black/60 uppercase tracking-wider">USDC WON</p>
                 </div>
-              </div>
 
-              {/* Prize Amount */}
-              <div className="text-right">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: index * 0.1 + 0.2, type: "spring" }}
-                  className="flex items-center gap-1 text-lg font-bold text-primary-600"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  {round.pot_amount.toFixed(1)}
-                </motion.div>
-                <span className="text-xs text-gray-500">USDC won</span>
+                {/* View Button */}
+                {round.winner_cast_hash && (
+                  <a
+                    href={`https://warpcast.com/${round.winner_fid}/${round.winner_cast_hash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex-shrink-0 w-10 h-10 flex items-center justify-center border-3 border-black text-black hover:bg-black hover:text-white transition-colors duration-75"
+                  >
+                    <ExternalLink className="w-5 h-5" />
+                  </a>
+                )}
               </div>
-
-              {/* View Button */}
-              {round.winner_cast_hash && (
-                <motion.a
-                  href={`https://warpcast.com/${round.winner_fid}/${round.winner_cast_hash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex-shrink-0 p-2 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </motion.a>
-              )}
             </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
+          );
+        })}
+      </div>
     </div>
   );
 }

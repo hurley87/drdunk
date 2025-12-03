@@ -1,6 +1,7 @@
 "use client";
 
 import { useApiQuery } from "@/hooks/use-api-query";
+import { cn } from "@/lib/utils";
 
 interface Round {
   id: number;
@@ -32,9 +33,9 @@ export default function PlayerLeaderboard() {
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-4xl mx-auto p-4">
-        <div className="flex items-center justify-center py-6">
-          <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-purple-600" />
+      <div className="w-full">
+        <div className="bg-white border-3 border-black shadow-brutal p-8 flex items-center justify-center">
+          <div className="w-8 h-8 border-3 border-black border-t-red-500 animate-spin" />
         </div>
       </div>
     );
@@ -42,10 +43,10 @@ export default function PlayerLeaderboard() {
 
   if (error) {
     return (
-      <div className="w-full max-w-4xl mx-auto p-4">
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-          <p className="text-sm text-red-800">
-            Failed to load player leaderboard. Please try again.
+      <div className="w-full">
+        <div className="bg-red-500 border-3 border-black shadow-brutal p-4">
+          <p className="font-mono text-sm text-white uppercase">
+            ERROR: FAILED TO LOAD PLAYER LEADERBOARD
           </p>
         </div>
       </div>
@@ -94,59 +95,95 @@ export default function PlayerLeaderboard() {
     .slice(0, 8);
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Player Leaderboard</h2>
-          <p className="text-sm text-gray-600">
-            Legends ranked by total wins and pot earnings
-          </p>
-        </div>
+    <div className="w-full">
+      {/* Header */}
+      <div className="mb-4">
+        <h2 className="font-brutal text-3xl md:text-4xl uppercase">
+          HALL OF<br/>
+          <span className="text-red-500">LEGENDS</span>
+        </h2>
+        <p className="font-mono text-xs text-black/60 uppercase mt-1">
+          Ranked by wins & earnings
+        </p>
       </div>
 
       {leaderboard.length === 0 ? (
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center">
-          <p className="text-gray-600">No winners yet. Be the first legend!</p>
+        <div className="bg-white border-3 border-black border-dashed p-8 text-center">
+          <div className="w-16 h-16 bg-red-500 mx-auto mb-4 flex items-center justify-center -rotate-3">
+            <span className="font-brutal text-3xl text-white">0</span>
+          </div>
+          <p className="font-brutal text-xl uppercase mb-1">NO WINNERS YET</p>
+          <p className="font-mono text-xs text-black/60 uppercase">Be the first legend!</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {leaderboard.map((player, index) => (
-            <div
-              key={player.fid}
-              className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-100 text-lg font-bold text-purple-700">
-                    #{index + 1}
+        <div className="space-y-3">
+          {leaderboard.map((player, index) => {
+            const isTop = index === 0;
+            const rotation = index % 3 === 0 ? "rotate-[0.5deg]" : index % 3 === 1 ? "rotate-[-0.3deg]" : "rotate-[0.2deg]";
+            
+            return (
+              <div
+                key={player.fid}
+                className={cn(
+                  "border-3 border-black transition-all duration-100",
+                  rotation,
+                  isTop
+                    ? "bg-red-500 text-white shadow-brutal-lg"
+                    : "bg-white shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-lg"
+                )}
+              >
+                <div className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-4">
+                    {/* Rank */}
+                    <div className={cn(
+                      "w-12 h-12 flex items-center justify-center font-brutal text-2xl border-3",
+                      isTop
+                        ? "bg-white text-red-500 border-white"
+                        : "bg-black text-white border-black"
+                    )}>
+                      #{index + 1}
+                    </div>
+                    
+                    {/* Player Info */}
+                    <div>
+                      <p className={cn(
+                        "font-brutal text-xl uppercase",
+                        isTop ? "text-white" : "text-black"
+                      )}>
+                        FID {player.fid}
+                      </p>
+                      <p className={cn(
+                        "font-mono text-xs uppercase",
+                        isTop ? "text-white/70" : "text-black/60"
+                      )}>
+                        Last win: {player.lastWinDate
+                          ? new Date(player.lastWinDate).toLocaleDateString()
+                          : "—"}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-base font-semibold text-gray-900">
-                      Player FID {player.fid}
+
+                  {/* Stats */}
+                  <div className="text-right">
+                    <p className={cn(
+                      "font-mono text-sm uppercase",
+                      isTop ? "text-white/70" : "text-black/60"
+                    )}>
+                      {player.wins} {player.wins === 1 ? "WIN" : "WINS"}
                     </p>
-                    <p className="text-sm text-gray-500">
-                      Last win:{" "}
-                      {player.lastWinDate
-                        ? new Date(player.lastWinDate).toLocaleDateString()
-                        : "—"}
+                    <p className={cn(
+                      "font-brutal text-2xl",
+                      isTop ? "text-white" : "text-red-500"
+                    )}>
+                      {player.totalPot.toFixed(1)} <span className="text-sm">USDC</span>
                     </p>
                   </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-600">
-                    {player.wins} {player.wins === 1 ? "win" : "wins"}
-                  </p>
-                  <p className="text-lg font-bold text-purple-600">
-                    {player.totalPot.toFixed(1)} USDC
-                  </p>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
-
-

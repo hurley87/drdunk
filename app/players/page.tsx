@@ -1,82 +1,108 @@
 import { Metadata } from "next";
 import PastWinners from "@/components/game/past-winners";
-import { Users, Award, TrendingUp, Crown, Star, Sparkles } from "lucide-react";
+import { Users, Award, TrendingUp, Crown, Star, Zap } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Player Leaderboard - Doctor Dunk",
-  description: "View top players and past winners in the Doctor Dunk game",
+  title: "PLAYER LEADERBOARD - DOCTOR DUNK",
+  description: "VIEW TOP PLAYERS AND PAST WINNERS IN THE DOCTOR DUNK GAME",
 };
 
 export default function PlayersPage() {
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-24 bg-white bg-stripes">
+      {/* Decorative elements */}
+      <div className="pointer-events-none absolute top-8 left-4 w-20 h-20 bg-red-500 border-3 border-black -rotate-12 opacity-20" />
+      <div className="pointer-events-none absolute top-56 right-0 w-16 h-32 bg-black rotate-6 opacity-10" />
 
+      {/* Header Section - Brutalist */}
+      <div className="border-b-3 border-black bg-white">
+        <div className="max-w-3xl mx-auto px-4 py-6">
+          <div className="flex items-start gap-4">
+            <div className="w-14 h-14 bg-black border-3 border-black shadow-brutal-red flex items-center justify-center transform -rotate-3">
+              <Users className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="font-brutal text-4xl md:text-5xl tracking-wider text-black leading-none transform rotate-1">
+                PLAYERS
+              </h1>
+              <p className="font-mono text-xs uppercase tracking-widest text-black/60 mt-1 transform -rotate-1">
+                HALL OF CHAMPIONS
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
-        {/* Past Winners */}
-        <div className="card-glow">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-yellow-100 flex items-center justify-center">
-              <Crown className="w-4 h-4 text-amber-600" />
+        {/* Past Winners - Main Card */}
+        <div className="bg-white border-3 border-black shadow-brutal p-6 transform -rotate-[0.5deg] hover:rotate-0 transition-transform duration-75">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-red-500 border-3 border-black flex items-center justify-center transform rotate-6">
+              <Crown className="w-5 h-5 text-white" />
             </div>
-            <h2 className="text-lg font-bold text-gray-900">Past Winners</h2>
+            <h2 className="font-brutal text-2xl tracking-wider text-black uppercase">
+              PAST WINNERS
+            </h2>
           </div>
           <PastWinners />
         </div>
 
-        {/* Coming Soon Card */}
-        <div className="relative rounded-2xl bg-gradient-to-br from-gray-50 via-white to-gray-50 border border-gray-200 p-8 text-center overflow-hidden">
-          {/* Decorative elements */}
-          <div className="absolute top-4 left-4 w-16 h-16 bg-gradient-to-br from-primary-100 to-amber-100 rounded-full blur-2xl opacity-50" />
-          <div className="absolute bottom-4 right-4 w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full blur-2xl opacity-50" />
+        {/* Coming Soon Card - Brutalist */}
+        <div className="relative bg-white border-3 border-black shadow-brutal p-8 text-center transform rotate-[0.5deg] hover:rotate-0 transition-transform duration-75 overflow-hidden">
+          {/* Decorative corners */}
+          <div className="absolute top-0 left-0 w-12 h-12 bg-black transform -translate-x-6 -translate-y-6 rotate-45" />
+          <div className="absolute bottom-0 right-0 w-12 h-12 bg-red-500 transform translate-x-6 translate-y-6 rotate-45" />
           
           <div className="relative">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <Sparkles className="w-8 h-8 text-gray-400" />
+            <div className="w-16 h-16 bg-black border-3 border-black flex items-center justify-center mx-auto mb-4 transform -rotate-6">
+              <Zap className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">All-Time Leaderboard</h3>
-            <p className="text-sm text-gray-500 max-w-sm mx-auto mb-4">
-              We&apos;re building a comprehensive leaderboard with all-time stats,
-              win streaks, and more!
+            <h3 className="font-brutal text-3xl tracking-wider text-black mb-2 uppercase">
+              ALL-TIME LEADERBOARD
+            </h3>
+            <p className="font-mono text-xs uppercase tracking-wide text-black/60 max-w-sm mx-auto mb-6">
+              WE&apos;RE BUILDING A COMPREHENSIVE LEADERBOARD WITH ALL-TIME STATS, WIN STREAKS, AND MORE!
             </p>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 text-primary-600 text-sm font-medium">
-              <Star className="w-4 h-4" />
-              Coming Soon
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-red-500 text-white border-3 border-black shadow-brutal font-brutal text-lg uppercase tracking-wider transform -rotate-2">
+              <Star className="w-5 h-5" />
+              COMING SOON
             </div>
           </div>
         </div>
 
-        {/* Stats Legend */}
-        <div className="card">
-          <h3 className="text-sm font-bold text-gray-900 mb-4">Understanding the Stats</h3>
+        {/* Stats Legend - Offset Grid */}
+        <div className="bg-white border-3 border-black shadow-brutal p-6 transform -rotate-[0.5deg] hover:rotate-0 transition-transform duration-75">
+          <h3 className="font-brutal text-2xl tracking-wider text-black mb-6 uppercase">
+            UNDERSTANDING THE STATS
+          </h3>
           <div className="grid sm:grid-cols-2 gap-4">
-            <div className="flex items-start gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100">
-              <Crown className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-3 p-4 border-3 border-black bg-white transform translate-x-1">
+              <Crown className="w-6 h-6 text-red-500 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Total Wins</p>
-                <p className="text-xs text-gray-500">Daily competitions won</p>
+                <p className="font-brutal text-lg uppercase tracking-wide text-black">TOTAL WINS</p>
+                <p className="font-mono text-xs uppercase tracking-wide text-black/60">DAILY COMPETITIONS WON</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100">
-              <TrendingUp className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-3 p-4 border-3 border-black bg-white transform -translate-x-2 translate-y-1">
+              <TrendingUp className="w-6 h-6 text-black mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Participation</p>
-                <p className="text-xs text-gray-500">Total entries submitted</p>
+                <p className="font-brutal text-lg uppercase tracking-wide text-black">PARTICIPATION</p>
+                <p className="font-mono text-xs uppercase tracking-wide text-black/60">TOTAL ENTRIES SUBMITTED</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-100">
-              <Award className="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-3 p-4 border-3 border-black bg-white transform -translate-x-1">
+              <Award className="w-6 h-6 text-red-500 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Total Winnings</p>
-                <p className="text-xs text-gray-500">Prize money earned</p>
+                <p className="font-brutal text-lg uppercase tracking-wide text-black">TOTAL WINNINGS</p>
+                <p className="font-mono text-xs uppercase tracking-wide text-black/60">PRIZE MONEY EARNED</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
-              <Users className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-3 p-4 border-3 border-black bg-white transform translate-x-2 -translate-y-1">
+              <Users className="w-6 h-6 text-black mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Win Rate</p>
-                <p className="text-xs text-gray-500">Percentage of wins</p>
+                <p className="font-brutal text-lg uppercase tracking-wide text-black">WIN RATE</p>
+                <p className="font-mono text-xs uppercase tracking-wide text-black/60">PERCENTAGE OF WINS</p>
               </div>
             </div>
           </div>
