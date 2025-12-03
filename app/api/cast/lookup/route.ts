@@ -17,18 +17,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log("[cast/lookup] Looking up cast with identifier:", identifier);
+
     const cast = await fetchCast(identifier);
 
     if (!cast) {
+      console.log("[cast/lookup] Cast not found for identifier:", identifier);
       return NextResponse.json(
         { error: "Cast not found" },
         { status: 404 }
       );
     }
 
+    console.log("[cast/lookup] Successfully found cast:", cast.hash);
     return NextResponse.json({ success: true, cast });
   } catch (error) {
     console.error("[cast/lookup] Error:", error);
+    console.error("[cast/lookup] Identifier was:", request.url);
     return NextResponse.json(
       {
         error: "Failed to lookup cast",
