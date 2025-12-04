@@ -5,12 +5,8 @@ import { User, DollarSign } from "lucide-react";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAccount, useReadContract } from "wagmi";
-import { env } from "@/lib/env";
 import { Address, formatUnits } from "viem";
-
-// USDC contract addresses
-const USDC_BASE_MAINNET = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-const USDC_BASE_SEPOLIA = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+import { USDC_CONTRACT_ADDRESS } from "@/lib/constants";
 
 // USDC ABI for balanceOf
 const USDC_ABI = [
@@ -25,17 +21,10 @@ const USDC_ABI = [
 
 export default function ProfileHeader() {
   const { user, isLoading } = useUser();
-  const { address, isConnected, chain } = useAccount();
+  const { address, isConnected } = useAccount();
 
-  // Get USDC contract address based on chain or env
-  const usdcAddress = (() => {
-    if (env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS) {
-      return env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS as Address;
-    }
-    return chain?.id === 8453
-      ? (USDC_BASE_MAINNET as Address)
-      : (USDC_BASE_SEPOLIA as Address);
-  })();
+  // Hardcoded USDC address (Base Mainnet)
+  const usdcAddress = USDC_CONTRACT_ADDRESS as Address;
 
   // Read USDC balance
   const { data: usdcBalance, isLoading: isBalanceLoading } = useReadContract({

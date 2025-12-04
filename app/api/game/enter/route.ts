@@ -5,6 +5,7 @@ import { supabaseAdmin, isSupabaseAdminConfigured } from "@/lib/supabase";
 import { getCurrentRoundId } from "@/lib/game-utils";
 import { postDunkCast } from "@/lib/webhook/neynar";
 import { env } from "@/lib/env";
+import { GAME_CONTRACT_ADDRESS } from "@/lib/constants";
 import { createPublicClient, createWalletClient, http, decodeFunctionData } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
@@ -142,8 +143,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Verify transaction was sent to the correct contract
-      const contractAddress = env.GAME_CONTRACT_ADDRESS;
-      if (!contractAddress || tx.to?.toLowerCase() !== contractAddress.toLowerCase()) {
+      if (tx.to?.toLowerCase() !== GAME_CONTRACT_ADDRESS.toLowerCase()) {
         return NextResponse.json(
           {
             error: "Invalid transaction",
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
           // Read entryFee from contract
           try {
             const entryFee = await client.readContract({
-              address: contractAddress as `0x${string}`,
+              address: GAME_CONTRACT_ADDRESS as `0x${string}`,
               abi: DOCTOR_DUNK_ABI,
               functionName: "entryFee",
             });
@@ -356,11 +356,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Update contract's cast hash mapping
-    const contractAddress = env.GAME_CONTRACT_ADDRESS;
     const privateKey = env.CRON_WALLET_PRIVATE_KEY;
     let contractUpdateSuccess = false;
 
-    if (contractAddress && privateKey && tempCastHash !== castHash) {
+    if (privateKey && tempCastHash !== castHash) {
       const chain = env.NEXT_PUBLIC_APP_ENV === "production" ? base : baseSepolia;
       const publicClient = createPublicClient({
         chain,
@@ -393,7 +392,7 @@ export async function POST(request: NextRequest) {
       for (let attempt = 1; attempt <= 3 && !contractUpdateSuccess; attempt++) {
         try {
           const hash = await walletClient.writeContract({
-            address: contractAddress as `0x${string}`,
+            address: GAME_CONTRACT_ADDRESS as `0x${string}`,
             abi: UPDATE_CAST_HASH_ABI,
             functionName: "updateCastHash",
             args: [tempCastHash, castHash],

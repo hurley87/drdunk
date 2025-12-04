@@ -4,32 +4,7 @@ import { supabase, supabaseAdmin, isSupabaseAdminConfigured } from "@/lib/supaba
 import { createPublicClient, http } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import { env } from "@/lib/env";
-
-// DoctorDunk contract ABI (minimal)
-const DOCTOR_DUNK_ABI = [
-  {
-    inputs: [{ name: "roundId", type: "uint256" }],
-    name: "claimDailyReward",
-    outputs: [],
-    type: "function",
-    stateMutability: "nonpayable",
-  },
-  {
-    inputs: [{ name: "roundId", type: "uint256" }],
-    name: "getRoundInfo",
-    outputs: [
-      { name: "startTime", type: "uint256" },
-      { name: "endTime", type: "uint256" },
-      { name: "potAmount", type: "uint256" },
-      { name: "winner", type: "address" },
-      { name: "winnerCastHash", type: "string" },
-      { name: "finalized", type: "bool" },
-      { name: "entryCount", type: "uint256" },
-    ],
-    type: "function",
-    stateMutability: "view",
-  },
-] as const;
+import { GAME_CONTRACT_ADDRESS } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   try {
@@ -118,17 +93,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get contract address
-    const contractAddress = env.GAME_CONTRACT_ADDRESS;
-    if (!contractAddress) {
-      return NextResponse.json(
-        {
-          error: "Contract not configured",
-        },
-        { status: 500 }
-      );
-    }
-
     // If transaction hash is provided, verify the on-chain transaction succeeded
     // and update the database. Otherwise, just return eligibility info.
     if (txHash) {
@@ -146,7 +110,7 @@ export async function POST(request: NextRequest) {
 
         if (receipt.status === "success") {
           // Verify the transaction was to the correct contract and function
-          if (receipt.to?.toLowerCase() === contractAddress.toLowerCase()) {
+          if (receipt.to?.toLowerCase() === GAME_CONTRACT_ADDRESS.toLowerCase()) {
             // Update database status only after successful on-chain transaction
             // Use supabaseAdmin to bypass RLS for write operations
             const { error: updateError } = await supabaseAdmin
@@ -207,7 +171,7 @@ export async function POST(request: NextRequest) {
       message: "You are eligible to claim. Submit the transaction and then call this endpoint again with the transaction hash.",
       data: {
         roundId,
-        contractAddress,
+        contractAddress: GAME_CONTRACT_ADDRESS,
         functionName: "claimDailyReward",
         args: [roundId],
       },

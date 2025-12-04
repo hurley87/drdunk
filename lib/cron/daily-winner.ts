@@ -4,6 +4,7 @@ import { createPublicClient, createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base, baseSepolia } from "viem/chains";
 import { env } from "@/lib/env";
+import { GAME_CONTRACT_ADDRESS } from "@/lib/constants";
 
 // DoctorDunk contract ABI (minimal)
 const DOCTOR_DUNK_ABI = [
@@ -157,10 +158,9 @@ export async function calculateDailyWinner() {
 
     // Call smart contract to finalize round
     // IMPORTANT: This must succeed for winners to be able to claim rewards
-    const contractAddress = env.GAME_CONTRACT_ADDRESS;
     const privateKey = env.CRON_WALLET_PRIVATE_KEY;
     
-    if (contractAddress && privateKey) {
+    if (privateKey) {
       try {
         const chain = env.NEXT_PUBLIC_APP_ENV === "production" ? base : baseSepolia;
         const publicClient = createPublicClient({
@@ -176,11 +176,11 @@ export async function calculateDailyWinner() {
           transport: http(),
         });
 
-        console.log(`[daily-winner] Finalizing round ${previousRoundId} on contract ${contractAddress}...`);
+        console.log(`[daily-winner] Finalizing round ${previousRoundId} on contract ${GAME_CONTRACT_ADDRESS}...`);
 
         // Query the contract to get registered cast hashes
         const contractCastHashes = await publicClient.readContract({
-          address: contractAddress as `0x${string}`,
+          address: GAME_CONTRACT_ADDRESS as `0x${string}`,
           abi: DOCTOR_DUNK_ABI,
           functionName: "getRoundCastHashes",
           args: [BigInt(previousRoundId)],
@@ -207,7 +207,7 @@ export async function calculateDailyWinner() {
               try {
                 console.log(`[daily-winner] Updating contract hash: ${contractHash} -> ${entry.cast_hash}`);
                 const updateHash = await walletClient.writeContract({
-                  address: contractAddress as `0x${string}`,
+                  address: GAME_CONTRACT_ADDRESS as `0x${string}`,
                   abi: DOCTOR_DUNK_ABI,
                   functionName: "updateCastHash",
                   args: [contractHash, entry.cast_hash],
@@ -225,7 +225,7 @@ export async function calculateDailyWinner() {
         
         // Re-fetch contract hashes after updates
         const finalContractCastHashes = await publicClient.readContract({
-          address: contractAddress as `0x${string}`,
+          address: GAME_CONTRACT_ADDRESS as `0x${string}`,
           abi: DOCTOR_DUNK_ABI,
           functionName: "getRoundCastHashes",
           args: [BigInt(previousRoundId)],
@@ -261,7 +261,7 @@ export async function calculateDailyWinner() {
 
         // Call finalizeRound on the contract with engagement data
         const hash = await walletClient.writeContract({
-          address: contractAddress as `0x${string}`,
+          address: GAME_CONTRACT_ADDRESS as `0x${string}`,
           abi: DOCTOR_DUNK_ABI,
           functionName: "finalizeRound",
           args: [
@@ -305,15 +305,10 @@ export async function calculateDailyWinner() {
         );
       }
     } else {
-      if (!contractAddress) {
-        console.warn("[daily-winner] GAME_CONTRACT_ADDRESS not set, skipping contract finalization");
-      }
-      if (!privateKey) {
-        console.warn(
-          "[daily-winner] CRON_WALLET_PRIVATE_KEY not set, skipping contract finalization. " +
-            "Winners will not be able to claim rewards until the round is finalized on-chain."
-        );
-      }
+      console.warn(
+        "[daily-winner] CRON_WALLET_PRIVATE_KEY not set, skipping contract finalization. " +
+          "Winners will not be able to claim rewards until the round is finalized on-chain."
+      );
     }
 
     // Send notification to winner (if notification system is set up)

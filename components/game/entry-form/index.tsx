@@ -7,8 +7,7 @@ import { useUser } from "@/contexts/user-context";
 import { useMiniApp } from "@/contexts/miniapp-context";
 import { z } from "zod";
 import { parseUnits, Address } from "viem";
-import { base } from "viem/chains";
-import { env } from "@/lib/env";
+import { GAME_CONTRACT_ADDRESS } from "@/lib/constants";
 import { ConfirmationDialog } from "./confirmation-dialog";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import { Button } from "@/components/ui/button";
@@ -67,9 +66,8 @@ interface EntryResponse {
   message?: string;
 }
 
-// USDC contract addresses
+// USDC contract address (Base Mainnet)
 const USDC_BASE_MAINNET = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-const USDC_BASE_SEPOLIA = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 
 // USDC ABI
 const USDC_ABI = [
@@ -142,7 +140,7 @@ const DEFAULT_ENTRY_FEE = parseUnits("1", 6); // Default to 1 USDC (6 decimals) 
 
 export default function EntryForm() {
   const { user, isLoading: isUserLoading, signIn } = useUser();
-  const { address, isConnected, chain } = useAccount();
+  const { address, isConnected } = useAccount();
   const { connect, connectors, isPending: isConnecting } = useConnect();
   const { isMiniAppReady } = useMiniApp();
   const { play } = useSound();
@@ -234,21 +232,9 @@ export default function EntryForm() {
     }
   }, [isMiniAppReady, isConnected, isConnecting, connectors, connect]);
 
-  // Get USDC contract address based on chain or env
-  const usdcAddress = (() => {
-    // Use env variable if available, otherwise fallback to chain-based defaults
-    if (env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS) {
-      return env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS as Address;
-    }
-    return chain?.id === base.id 
-      ? (USDC_BASE_MAINNET as Address)
-      : (USDC_BASE_SEPOLIA as Address);
-  })();
-
-  // Get game contract address from environment variable
-  const gameContractAddress = env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS 
-    ? (env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS as Address)
-    : undefined;
+  // Hardcoded contract addresses (Base Mainnet)
+  const usdcAddress = USDC_BASE_MAINNET as Address;
+  const gameContractAddress = GAME_CONTRACT_ADDRESS as Address;
 
   // Dynamically fetch entryFee from contract
   const { data: contractEntryFee, isLoading: isLoadingEntryFee } = useReadContract({
@@ -366,7 +352,7 @@ export default function EntryForm() {
   const handleEnterGame = () => {
     if (!gameContractAddress) {
       setErrors({ 
-        payment: "Game contract address not configured. Please set NEXT_PUBLIC_GAME_CONTRACT_ADDRESS environment variable." 
+        payment: "Game contract address not configured." 
       });
       return;
     }
