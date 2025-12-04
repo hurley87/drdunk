@@ -611,7 +611,7 @@ export default function EntryForm() {
             placeholder={selectedCast ? "WRITE SOMETHING THAT WILL GET ENGAGEMENT..." : "PLEASE SELECT A CAST FIRST..."}
             rows={4}
             className={cn(
-              "w-full px-4 py-4 bg-white border-3 font-mono text-sm uppercase tracking-wide placeholder:text-black/30 resize-none focus:outline-none transition-all duration-75",
+              "w-full px-4 py-4 bg-white border-3 font-mono text-sm tracking-wide placeholder:text-black/30 placeholder:uppercase resize-none focus:outline-none transition-all duration-75",
               errors.dunkText 
                 ? "border-red-500 shadow-brutal-red animate-shake" 
                 : selectedCast
