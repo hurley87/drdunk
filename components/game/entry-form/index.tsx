@@ -51,7 +51,7 @@ const dunkSchema = z.object({
 
 interface EntryFormData {
   dunkText: string;
-  parentCastUrl: string;
+  parentCastHash: string;
   paymentTxHash: string;
 }
 
@@ -337,17 +337,17 @@ export default function EntryForm() {
 
   // Handle payment step - after entering game on contract
   useEffect(() => {
-    if (isEntered && enterHash && step === "pay") {
+    if (isEntered && enterHash && step === "pay" && selectedCast?.hash) {
       // Submit to backend with payment tx hash
       // Backend will post cast and handle hash sync
       submitEntry({
         dunkText,
-        parentCastUrl,
+        parentCastHash: selectedCast.hash,
         paymentTxHash: enterHash,
       });
       setStep("submit");
     }
-  }, [isEntered, enterHash, step, dunkText, parentCastUrl, submitEntry]);
+  }, [isEntered, enterHash, step, dunkText, selectedCast?.hash, submitEntry]);
 
   const handleApprove = () => {
     if (!gameContractAddress || !address) return;

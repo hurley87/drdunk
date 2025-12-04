@@ -9,31 +9,20 @@ import { createPublicClient, createWalletClient, http, decodeFunctionData } from
 import { base, baseSepolia } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 
-// Validation for cast URL or hash
-const castUrlOrHashSchema = z.string().min(1, "Cast URL or hash is required").refine(
+// Validation for cast hash (must be 0x-prefixed hex string)
+const castHashSchema = z.string().min(1, "Cast hash is required").refine(
   (val) => {
     const trimmed = val.trim();
-    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-      try {
-        new URL(trimmed);
-        return true;
-      } catch {
-        return false;
-      }
-    }
-    if (trimmed.startsWith("0x") && /^0x[a-fA-F0-9]+$/.test(trimmed)) {
-      return true;
-    }
-    return false;
+    return trimmed.startsWith("0x") && /^0x[a-fA-F0-9]+$/.test(trimmed);
   },
   {
-    message: "Must be a valid cast URL (https://warpcast.com/...) or cast hash (0x...)",
+    message: "Must be a valid cast hash (0x...)",
   }
 );
 
 const enterGameSchema = z.object({
   dunkText: z.string().min(1, "Dunk text cannot be empty"),
-  parentCastUrl: castUrlOrHashSchema,
+  parentCastHash: castHashSchema,
   paymentTxHash: z.string().min(1, "Payment transaction hash required"),
 });
 
@@ -68,7 +57,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { dunkText, parentCastUrl, paymentTxHash } = validationResult.data;
+    const { dunkText, parentCastHash, paymentTxHash } = validationResult.data;
 
     // Check if Supabase admin is configured
     if (!isSupabaseAdminConfigured()) {
@@ -322,7 +311,7 @@ export async function POST(request: NextRequest) {
     let castUrl: string;
 
     try {
-      const castResponse = await postDunkCast(dunkText, parentCastUrl);
+      const castResponse = await postDunkCast(dunkText, parentCastHash);
       castHash = castResponse.cast?.hash || castResponse.result?.cast?.hash || "";
       const authorFid = castResponse.cast?.author?.fid || castResponse.result?.cast?.author?.fid;
       castUrl = castHash && authorFid 

@@ -41,33 +41,27 @@ export function buildEmbedUrl(baseUrl: string, fids: number[]): string {
 /**
  * Post a cast as a reply to another cast
  * @param text The text content of the cast
- * @param parentCastUrlOrHash Parent cast URL or hash (required)
+ * @param parentCastHash Parent cast hash (must be 0x-prefixed hex string, pre-validated)
  * @returns The cast response with hash and other metadata
  */
 export async function postDunkCast(
   text: string,
-  parentCastUrlOrHash: string
+  parentCastHash: string
 ): Promise<CastReplyResponse> {
-  const body: any = {
-    signer_uuid: env.SIGNER_UUID,
-    text,
-  };
-
-  // Extract cast hash from URL or use directly if it's already a hash
-  let castHash = parentCastUrlOrHash.trim();
-  
-  // If it's a URL, extract the hash from the last segment
-  if (castHash.includes("/")) {
-    const urlParts = castHash.split("/");
-    castHash = urlParts[urlParts.length - 1];
-  }
+  const trimmedHash = parentCastHash.trim();
   
   // Validate that we have a valid cast hash (starts with 0x and is hex)
-  if (castHash && castHash.startsWith("0x") && /^0x[a-fA-F0-9]+$/.test(castHash)) {
-    body.parent = castHash;
-  } else {
-    throw new Error(`Invalid cast hash format: ${castHash}. Expected a cast hash (0x...) or cast URL.`);
+  if (!trimmedHash.startsWith("0x") || !/^0x[a-fA-F0-9]+$/.test(trimmedHash)) {
+    throw new Error(`Invalid cast hash format: ${trimmedHash}. Expected a cast hash (0x...)`);
   }
+
+  console.log(`[postDunkCast] Posting reply to parent hash: ${trimmedHash}`);
+
+  const body = {
+    signer_uuid: env.SIGNER_UUID,
+    text,
+    parent: trimmedHash,
+  };
 
   const response = await fetch("https://api.neynar.com/v2/farcaster/cast", {
     method: "POST",
