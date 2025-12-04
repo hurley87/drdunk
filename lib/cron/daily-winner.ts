@@ -35,6 +35,23 @@ const DOCTOR_DUNK_ABI = [
     type: "function",
     stateMutability: "view",
   },
+  {
+    inputs: [{ name: "roundId", type: "uint256" }],
+    name: "getRoundCastHashes",
+    outputs: [{ name: "", type: "string[]" }],
+    type: "function",
+    stateMutability: "view",
+  },
+  {
+    inputs: [
+      { name: "oldCastHash", type: "string" },
+      { name: "newCastHash", type: "string" },
+    ],
+    name: "updateCastHash",
+    outputs: [],
+    type: "function",
+    stateMutability: "nonpayable",
+  },
 ] as const;
 
 /**
@@ -161,12 +178,149 @@ export async function calculateDailyWinner() {
 
         console.log(`[daily-winner] Finalizing round ${previousRoundId} on contract ${contractAddress}...`);
 
+        // IMPORTANT: First query the contract to get the cast hashes it has registered
+        // This handles cases where the contract has temp hashes that weren't updated to real hashes
+        const contractCastHashes = await publicClient.readContract({
+          address: contractAddress as `0x${string}`,
+          abi: DOCTOR_DUNK_ABI,
+          functionName: "getRoundCastHashes",
+          args: [BigInt(previousRoundId)],
+        });
+
+        console.log(`[daily-winner] Contract has ${contractCastHashes.length} registered cast hashes:`, contractCastHashes);
+
+        // Create a map of database entries by cast_hash for easy lookup
+        const dbEntriesByHash = new Map(entries.map((e) => [e.cast_hash, e]));
+        
+        // Check if contract hashes match database hashes
+        // If contract has temp hashes (temp-*), try to update them to real hashes first
+        const tempHashesToUpdate: { tempHash: string; realHash: string; entry: typeof entries[0] }[] = [];
+        
+        for (const contractHash of contractCastHashes) {
+          // If this hash is a temp hash, find the corresponding entry by payment_tx_hash or timestamp
+          if (contractHash.startsWith("temp-")) {
+            // Find a database entry that might correspond to this temp hash
+            // The temp hash format is "temp-{timestamp}" or "temp-{timestamp}-{fid}"
+            const tempParts = contractHash.split("-");
+            const tempTimestamp = tempParts[1] ? parseInt(tempParts[1]) : 0;
+            const tempFid = tempParts[2] ? parseInt(tempParts[2]) : null;
+            
+            // Look for an entry that was created around the same time
+            const matchingEntry = entries.find((e) => {
+              // Skip if this entry's cast_hash is already in the contract
+              if (contractCastHashes.includes(e.cast_hash)) {
+                return false;
+              }
+              // Match by FID if available in temp hash
+              if (tempFid && e.fid === tempFid) {
+                return true;
+              }
+              // Otherwise match by timestamp proximity (within 5 minutes)
+              const entryTime = new Date(e.created_at).getTime();
+              return Math.abs(entryTime - tempTimestamp) < 5 * 60 * 1000;
+            });
+            
+            if (matchingEntry) {
+              tempHashesToUpdate.push({
+                tempHash: contractHash,
+                realHash: matchingEntry.cast_hash,
+                entry: matchingEntry,
+              });
+            } else {
+              console.warn(`[daily-winner] Could not find matching entry for temp hash: ${contractHash}`);
+            }
+          }
+        }
+        
+        // Try to update temp hashes to real hashes on the contract
+        if (tempHashesToUpdate.length > 0) {
+          console.log(`[daily-winner] Found ${tempHashesToUpdate.length} temp hashes that need updating`);
+          
+          for (const { tempHash, realHash, entry } of tempHashesToUpdate) {
+            try {
+              console.log(`[daily-winner] Updating contract cast hash: ${tempHash} -> ${realHash}`);
+              
+              const updateHash = await walletClient.writeContract({
+                address: contractAddress as `0x${string}`,
+                abi: DOCTOR_DUNK_ABI,
+                functionName: "updateCastHash",
+                args: [tempHash, realHash],
+              });
+              
+              const updateReceipt = await publicClient.waitForTransactionReceipt({ hash: updateHash });
+              
+              if (updateReceipt.status === "success") {
+                console.log(`[daily-winner] Successfully updated cast hash on contract for FID ${entry.fid}`);
+              } else {
+                console.error(`[daily-winner] Failed to update cast hash: transaction reverted`);
+              }
+            } catch (updateError) {
+              console.error(`[daily-winner] Failed to update cast hash ${tempHash}:`, updateError);
+              // Continue with other updates - we'll try to finalize with whatever we can
+            }
+          }
+          
+          // Re-fetch the contract cast hashes after updates
+          const updatedContractCastHashes = await publicClient.readContract({
+            address: contractAddress as `0x${string}`,
+            abi: DOCTOR_DUNK_ABI,
+            functionName: "getRoundCastHashes",
+            args: [BigInt(previousRoundId)],
+          });
+          
+          console.log(`[daily-winner] Contract cast hashes after update:`, updatedContractCastHashes);
+        }
+        
+        // Now get the final contract cast hashes to use for finalization
+        const finalContractCastHashes = await publicClient.readContract({
+          address: contractAddress as `0x${string}`,
+          abi: DOCTOR_DUNK_ABI,
+          functionName: "getRoundCastHashes",
+          args: [BigInt(previousRoundId)],
+        });
+        
         // Prepare engagement data arrays for contract call
-        // Entries are already sorted by engagement_score descending, then created_at ascending
-        const castHashes = entries.map((e) => e.cast_hash);
-        const likes = entries.map((e) => BigInt(e.likes || 0));
-        const recasts = entries.map((e) => BigInt(e.recasts || 0));
-        const replies = entries.map((e) => BigInt(e.replies || 0));
+        // IMPORTANT: We must use the contract's cast hashes in the SAME ORDER they're stored
+        // and look up engagement data from database entries
+        const castHashesForContract: string[] = [];
+        const likesForContract: bigint[] = [];
+        const recastsForContract: bigint[] = [];
+        const repliesForContract: bigint[] = [];
+        
+        for (const contractHash of finalContractCastHashes) {
+          // Find the database entry for this contract hash
+          let entry = dbEntriesByHash.get(contractHash);
+          
+          // If not found by direct hash, it might still be a temp hash
+          // In this case, try to find by proximity matching
+          if (!entry && contractHash.startsWith("temp-")) {
+            const tempParts = contractHash.split("-");
+            const tempTimestamp = tempParts[1] ? parseInt(tempParts[1]) : 0;
+            const tempFid = tempParts[2] ? parseInt(tempParts[2]) : null;
+            
+            entry = entries.find((e) => {
+              if (tempFid && e.fid === tempFid) return true;
+              const entryTime = new Date(e.created_at).getTime();
+              return Math.abs(entryTime - tempTimestamp) < 5 * 60 * 1000;
+            });
+          }
+          
+          if (entry) {
+            castHashesForContract.push(contractHash);
+            likesForContract.push(BigInt(entry.likes || 0));
+            recastsForContract.push(BigInt(entry.recasts || 0));
+            repliesForContract.push(BigInt(entry.replies || 0));
+          } else {
+            // Entry not found in database - use zero engagement
+            console.warn(`[daily-winner] No database entry found for contract hash: ${contractHash}, using zero engagement`);
+            castHashesForContract.push(contractHash);
+            likesForContract.push(BigInt(0));
+            recastsForContract.push(BigInt(0));
+            repliesForContract.push(BigInt(0));
+          }
+        }
+
+        console.log(`[daily-winner] Finalizing with ${castHashesForContract.length} cast hashes`);
 
         // Call finalizeRound on the contract with engagement data
         const hash = await walletClient.writeContract({
@@ -175,10 +329,10 @@ export async function calculateDailyWinner() {
           functionName: "finalizeRound",
           args: [
             BigInt(previousRoundId),
-            castHashes,
-            likes,
-            recasts,
-            replies,
+            castHashesForContract,
+            likesForContract,
+            recastsForContract,
+            repliesForContract,
           ],
         });
 
