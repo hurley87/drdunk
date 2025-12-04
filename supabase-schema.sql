@@ -58,7 +58,8 @@ CREATE TABLE IF NOT EXISTS game_entries (
   round_id BIGINT NOT NULL REFERENCES game_rounds(id) ON DELETE CASCADE,
   fid INTEGER NOT NULL,
   wallet_address TEXT NOT NULL,
-  cast_hash TEXT NOT NULL,
+  cast_hash TEXT NOT NULL,              -- Real cast hash from Farcaster (used for engagement tracking)
+  contract_cast_hash TEXT,              -- Hash registered in contract (temp hash initially, updated to real)
   cast_url TEXT,
   dunk_text TEXT NOT NULL,
   payment_tx_hash TEXT,

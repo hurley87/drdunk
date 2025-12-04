@@ -14,7 +14,7 @@ interface TransactionStatusProps {
 const steps = [
   { key: "approving", label: "APPROVING USDC", icon: Wallet },
   { key: "paying", label: "ENTERING GAME", icon: Zap },
-  { key: "confirming", label: "CONFIRMING", icon: FileCheck },
+  { key: "confirming", label: "POSTING CAST", icon: FileCheck },
 ];
 
 export function TransactionStatus({ step, txHash, error }: TransactionStatusProps) {
@@ -110,7 +110,7 @@ export function TransactionStatus({ step, txHash, error }: TransactionStatusProp
           {step === "approving" && "WAITING FOR USDC APPROVAL..."}
           {step === "approved" && "USDC APPROVED! PROCESSING..."}
           {step === "paying" && "PROCESSING GAME ENTRY..."}
-          {step === "confirming" && "CONFIRMING ON BLOCKCHAIN..."}
+          {step === "confirming" && "POSTING YOUR DUNK..."}
           {step === "confirmed" && "PAYMENT CONFIRMED!"}
         </p>
 

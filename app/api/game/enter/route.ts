@@ -13,7 +13,6 @@ import { privateKeyToAccount } from "viem/accounts";
 const castUrlOrHashSchema = z.string().min(1, "Cast URL or hash is required").refine(
   (val) => {
     const trimmed = val.trim();
-    // Accept URLs (must start with http:// or https://)
     if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
       try {
         new URL(trimmed);
@@ -22,7 +21,6 @@ const castUrlOrHashSchema = z.string().min(1, "Cast URL or hash is required").re
         return false;
       }
     }
-    // Accept cast hashes (must start with 0x and be hex)
     if (trimmed.startsWith("0x") && /^0x[a-fA-F0-9]+$/.test(trimmed)) {
       return true;
     }
@@ -60,10 +58,7 @@ export async function POST(request: NextRequest) {
     // Validate input
     const validationResult = enterGameSchema.safeParse(body);
 
-    console.log("validationResult", validationResult);
-
     if (!validationResult.success) {
-
       return NextResponse.json(
         {
           error: "Validation failed",
@@ -75,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     const { dunkText, parentCastUrl, paymentTxHash } = validationResult.data;
 
-    // Check if Supabase admin is configured (requires service role key for write operations)
+    // Check if Supabase admin is configured
     if (!isSupabaseAdminConfigured()) {
       return NextResponse.json(
         {
@@ -89,7 +84,7 @@ export async function POST(request: NextRequest) {
     // Get current round ID
     const roundId = getCurrentRoundId();
 
-    console.log("roundId", roundId);
+    console.log(`[game/enter] Processing entry for FID ${fid}, round ${roundId}`);
 
     // Check if user already entered today
     const { data: existingEntry, error: existingEntryError } = await supabaseAdmin
@@ -99,16 +94,11 @@ export async function POST(request: NextRequest) {
       .eq("fid", fid)
       .single();
 
-    console.log("existingEntry", existingEntry);
-    console.log("existingEntryError", existingEntryError);
-
-    // PGRST116 is "not found" error - this is expected if user hasn't entered yet
     if (existingEntryError && existingEntryError.code !== "PGRST116") {
       throw existingEntryError;
     }
 
     if (existingEntry) {
-      console.log("existingEntry", existingEntry);
       return NextResponse.json(
         {
           error: "Already entered",
@@ -118,13 +108,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("paymentTxHash", paymentTxHash);
-
-    // Extract wallet address and temporary cast hash from payment transaction
-    // IMPORTANT: Verify transaction succeeded on-chain before accepting entry
+    // Verify the on-chain transaction and extract temp cast hash
     let walletAddress = "";
     let tempCastHash = "";
-    let potContribution = 0.9; // Default, will be updated from contract if available
+    let potContribution = 0.9;
     
     try {
       const chain = env.NEXT_PUBLIC_APP_ENV === "production" ? base : baseSepolia;
@@ -133,13 +120,10 @@ export async function POST(request: NextRequest) {
         transport: http(),
       });
 
-      // Wait for transaction receipt to verify it succeeded on-chain
-      // This prevents accepting pending, failed, or unconfirmed transactions
+      // Wait for transaction receipt to verify it succeeded
       const receipt = await client.waitForTransactionReceipt({
         hash: paymentTxHash as `0x${string}`,
       });
-
-      console.log("receipt", receipt);
 
       if (receipt.status !== "success") {
         return NextResponse.json(
@@ -151,27 +135,26 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Get transaction details to extract the sender's wallet address and cast hash
+      // Get transaction details
       const tx = await client.getTransaction({
         hash: paymentTxHash as `0x${string}`,
       });
 
-      console.log("tx", tx);
-
       if (tx.from) {
         walletAddress = tx.from;
-        console.log("walletAddress", walletAddress);
       } else {
-        console.warn("[game/enter] Could not extract wallet address from transaction");
+        return NextResponse.json(
+          {
+            error: "Invalid transaction",
+            message: "Could not extract wallet address from transaction",
+          },
+          { status: 400 }
+        );
       }
 
       // Verify transaction was sent to the correct contract
-      // Use server-side env variable (not NEXT_PUBLIC prefix which is for client-side)
       const contractAddress = env.GAME_CONTRACT_ADDRESS;
-      console.log("contractAddress", contractAddress);
-      console.log("tx.to", tx.to);
       if (!contractAddress || tx.to?.toLowerCase() !== contractAddress.toLowerCase()) {
-        console.log("Invalid transaction");
         return NextResponse.json(
           {
             error: "Invalid transaction",
@@ -181,11 +164,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Decode the transaction input to extract the temporary cast hash
-      // The contract function is enterGame(string memory castHash)
+      // Decode the transaction input to extract the temp cast hash
       if (tx.input) {
         try {
-          console.log("tx.input", tx.input);
           const DOCTOR_DUNK_ABI = [
             {
               inputs: [{ name: "castHash", type: "string" }],
@@ -209,38 +190,27 @@ export async function POST(request: NextRequest) {
           });
           
           if (decoded.functionName === "enterGame" && decoded.args && decoded.args[0]) {
-            console.log("decoded", decoded);
             tempCastHash = decoded.args[0] as string;
-            console.log("tempCastHash", tempCastHash);
+            console.log(`[game/enter] Extracted temp cast hash from tx: ${tempCastHash}`);
           }
 
-          // Read entryFee from contract to calculate actual pot contribution
+          // Read entryFee from contract
           try {
             const entryFee = await client.readContract({
               address: contractAddress as `0x${string}`,
               abi: DOCTOR_DUNK_ABI,
               functionName: "entryFee",
             });
-
-            console.log("entryFee", entryFee);
-
-            // Calculate pot contribution: entryFee * 90 / 100 (90% goes to pot, 10% is fee)
-            // entryFee is in smallest unit (e.g., 1e6 for 1 USDC with 6 decimals)
             const entryFeeNumber = Number(entryFee);
-            potContribution = (entryFeeNumber * 90) / 100 / 1e6; // Convert from smallest unit to USDC
-            console.log("potContribution", potContribution);
-          } catch (feeError) {
-            console.log("feeError", feeError);
-            console.warn("[game/enter] Failed to read entryFee from contract, using default 0.9:", feeError);
-            // Continue with default 0.9 if contract read fails
+            potContribution = (entryFeeNumber * 90) / 100 / 1e6;
+          } catch {
+            console.warn("[game/enter] Failed to read entryFee from contract, using default 0.9");
           }
         } catch (decodeError) {
-          console.log("decodeError", decodeError);
           console.warn("[game/enter] Failed to decode transaction input:", decodeError);
         }
       }
     } catch (error) {
-      console.log("error", error);
       console.error("[game/enter] Failed to verify transaction:", error);
       return NextResponse.json(
         {
@@ -251,18 +221,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!walletAddress) {
-      console.log("!walletAddress", !walletAddress);
-      return NextResponse.json(
-        {
-          error: "Invalid payment transaction",
-          message: "Could not extract wallet address from payment transaction",
-        },
-        { status: 400 }
-      );
+    // Generate fallback temp hash if not extracted
+    if (!tempCastHash) {
+      tempCastHash = `temp-${Date.now()}-${fid}`;
+      console.log(`[game/enter] Generated fallback temp hash: ${tempCastHash}`);
     }
-
-    console.log("roundId", roundId);
 
     // Get or create current round
     let { data: round, error: roundError } = await supabaseAdmin
@@ -272,19 +235,17 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (roundError && roundError.code !== "PGRST116") {
-      // PGRST116 is "not found" error
       throw roundError;
     }
 
     if (!round) {
-      // Create new round
       const roundDate = new Date(roundId * 86400000).toISOString().split("T")[0];
       const { error: createRoundError } = await supabaseAdmin
         .from("game_rounds")
         .insert({
           id: roundId,
           date: roundDate,
-          pot_amount: 0, // Initialize to 0, will be incremented when entry is created
+          pot_amount: 0,
           status: "active",
         });
 
@@ -292,7 +253,6 @@ export async function POST(request: NextRequest) {
         throw createRoundError;
       }
 
-      // Fetch the newly created round to get accurate pot_amount
       const { data: newRound, error: fetchError } = await supabaseAdmin
         .from("game_rounds")
         .select("*")
@@ -306,47 +266,32 @@ export async function POST(request: NextRequest) {
       round = newRound;
     }
 
-    // IMPORTANT: Do database operations BEFORE posting cast to Farcaster
-    // This prevents orphaned casts if database operations fail
-    // Use tempCastHash for initial entry creation, then update with real castHash after posting
-    
-    // Update round pot amount atomically FIRST
-    // Pot contribution is calculated dynamically from contract's entryFee (90% goes to pot, 10% is fee)
-    // This ensures database stays in sync even if entryFee is changed via setEntryFee()
-    // Use atomic increment via RPC function to prevent race conditions with concurrent requests
-    // IMPORTANT: Update pot BEFORE creating entry to maintain atomicity - if entry creation fails,
-    // we can rollback the pot increment. If we create entry first and pot update fails, we have
-    // an orphaned entry with no pot increment.
+    // Update pot amount atomically
     const { error: potUpdateError } = await supabaseAdmin.rpc("increment_pot_amount", {
       round_id: roundId,
       amount: potContribution,
     });
 
     if (potUpdateError) {
-      console.error("[game/enter] Failed to atomically increment pot:", potUpdateError);
-      // If RPC function doesn't exist, this is a critical error
-      // The database function should be created via supabaseAdmin-schema.sql
+      console.error("[game/enter] Failed to increment pot:", potUpdateError);
       return NextResponse.json(
         {
           error: "Failed to update pot amount",
-          message: "Database function increment_pot_amount not found. Please run the database migrations.",
+          message: "Database function increment_pot_amount not found.",
         },
         { status: 500 }
       );
     }
 
-    // Create entry with tempCastHash FIRST (before posting cast)
-    // This ensures database operations succeed before we post to Farcaster
-    // We'll update the cast_hash after posting the cast successfully
-    const initialCastHash = tempCastHash || `temp-${Date.now()}-${fid}`;
-    let { data: entry, error: entryError } = await supabaseAdmin
+    const { data: entry, error: entryError } = await supabaseAdmin
       .from("game_entries")
       .insert({
         round_id: roundId,
         fid,
         wallet_address: walletAddress,
-        cast_hash: initialCastHash,
-        cast_url: "", // Will be updated after cast is posted
+        cast_hash: tempCastHash,
+        contract_cast_hash: tempCastHash,
+        cast_url: "",
         dunk_text: dunkText,
         payment_tx_hash: paymentTxHash,
         engagement_score: 0,
@@ -359,20 +304,10 @@ export async function POST(request: NextRequest) {
 
     if (entryError) {
       console.error("[game/enter] Database error:", entryError);
-      
-      // Rollback pot increment since entry creation failed
-      // This maintains atomicity: either both succeed or both fail
-      try {
-        await supabaseAdmin.rpc("increment_pot_amount", {
-          round_id: roundId,
-          amount: -potContribution, // Decrement by the same amount
-        });
-        console.log(`[game/enter] Rolled back pot increment for round ${roundId}`);
-      } catch (rollbackError) {
-        console.error("[game/enter] Failed to rollback pot increment:", rollbackError);
-        // Log error but don't fail the request - ops can fix manually if needed
-      }
-      
+      await supabaseAdmin.rpc("increment_pot_amount", {
+        round_id: roundId,
+        amount: -potContribution,
+      });
       return NextResponse.json(
         {
           error: "Failed to create entry",
@@ -382,298 +317,138 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // NOW post cast to Farcaster (after database operations succeed)
-    // This prevents orphaned casts if database operations fail
+    // NOW post cast to Farcaster (payment is confirmed, entry exists)
     let castHash: string;
     let castUrl: string;
 
     try {
       const castResponse = await postDunkCast(dunkText, parentCastUrl);
-      // Handle both response formats
       castHash = castResponse.cast?.hash || castResponse.result?.cast?.hash || "";
       const authorFid = castResponse.cast?.author?.fid || castResponse.result?.cast?.author?.fid;
       castUrl = castHash && authorFid 
         ? `https://warpcast.com/${authorFid}/${castHash}`
         : "";
     } catch (error) {
-      console.error("[game/enter] Failed to post cast:", error);
-      // Rollback database operations since cast posting failed
-      try {
-        // Delete the entry
-        await supabaseAdmin.from("game_entries").delete().eq("id", entry.id);
-        // Rollback pot increment
-        await supabaseAdmin.rpc("increment_pot_amount", {
-          round_id: roundId,
-          amount: -potContribution,
-        });
-        console.log(`[game/enter] Rolled back entry and pot increment due to cast posting failure`);
-      } catch (rollbackError) {
-        console.error("[game/enter] Failed to rollback after cast posting failure:", rollbackError);
-      }
-      
+      console.error(
+        `[game/enter] CAST_POST_FAILED: Payment confirmed but cast posting failed. ` +
+        `FID=${fid}, roundId=${roundId}, entryId=${entry.id}, tempHash="${tempCastHash}". ` +
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+      // Entry exists with temp hash - user paid, just couldn't post cast
+      // Don't rollback - they need to contact support
       return NextResponse.json(
         {
           error: "Failed to post cast",
-          message: error instanceof Error ? error.message : "Unknown error",
+          message: "Payment confirmed but cast posting failed. Please contact support.",
+          data: { entryId: entry.id, tempCastHash },
         },
         { status: 500 }
       );
     }
 
     if (!castHash) {
-      // Rollback database operations since cast posting failed
-      try {
-        await supabaseAdmin.from("game_entries").delete().eq("id", entry.id);
-        await supabaseAdmin.rpc("increment_pot_amount", {
-          round_id: roundId,
-          amount: -potContribution,
-        });
-        console.log(`[game/enter] Rolled back entry and pot increment due to invalid cast response`);
-      } catch (rollbackError) {
-        console.error("[game/enter] Failed to rollback after invalid cast response:", rollbackError);
-      }
-      
       return NextResponse.json(
         {
           error: "Invalid cast response",
-          message: "Failed to get cast hash from Neynar",
+          message: "Payment confirmed but failed to get cast hash. Please contact support.",
+          data: { entryId: entry.id, tempCastHash },
         },
         { status: 500 }
       );
     }
 
-    // Check if cast hash already exists in this round (shouldn't happen, but check anyway)
-    const { data: existingCast, error: existingCastError } = await supabaseAdmin
+    const { error: updateError } = await supabaseAdmin
       .from("game_entries")
-      .select("id")
-      .eq("round_id", roundId)
-      .eq("cast_hash", castHash)
-      .single();
+      .update({ cast_hash: castHash, cast_url: castUrl })
+      .eq("id", entry.id);
 
-    // PGRST116 is "not found" error - this is expected if cast hash is new
-    if (existingCastError && existingCastError.code !== "PGRST116") {
-      throw existingCastError;
+    if (updateError) {
+      console.error(`[game/enter] Failed to update entry with real cast hash: ${updateError.message}`);
     }
 
-    if (existingCast && existingCast.id !== entry.id) {
-      // Rollback database operations since cast hash already exists
-      try {
-        await supabaseAdmin.from("game_entries").delete().eq("id", entry.id);
-        await supabaseAdmin.rpc("increment_pot_amount", {
-          round_id: roundId,
-          amount: -potContribution,
-        });
-        console.log(`[game/enter] Rolled back entry and pot increment - cast hash already exists`);
-      } catch (rollbackError) {
-        console.error("[game/enter] Failed to rollback after duplicate cast hash:", rollbackError);
-      }
-      
-      return NextResponse.json(
+    // Update contract's cast hash mapping
+    const contractAddress = env.GAME_CONTRACT_ADDRESS;
+    const privateKey = env.CRON_WALLET_PRIVATE_KEY;
+    let contractUpdateSuccess = false;
+
+    if (contractAddress && privateKey && tempCastHash !== castHash) {
+      const chain = env.NEXT_PUBLIC_APP_ENV === "production" ? base : baseSepolia;
+      const publicClient = createPublicClient({
+        chain,
+        transport: http(),
+      });
+
+      const account = privateKeyToAccount(privateKey as `0x${string}`);
+      const walletClient = createWalletClient({
+        account,
+        chain,
+        transport: http(),
+      });
+
+      const UPDATE_CAST_HASH_ABI = [
         {
-          error: "Cast hash already used",
-          message: "This cast has already been submitted",
+          inputs: [
+            { name: "oldCastHash", type: "string" },
+            { name: "newCastHash", type: "string" },
+          ],
+          name: "updateCastHash",
+          outputs: [],
+          type: "function",
+          stateMutability: "nonpayable",
         },
-        { status: 400 }
-      );
-    }
+      ] as const;
 
-    // Update entry with real cast hash and cast URL
-    // Retry up to 3 times to handle transient database errors
-    let updateError = null;
-    let retries = 3;
-    let updateSucceeded = false;
-    
-    while (retries > 0 && !updateSucceeded) {
-      const { error, data } = await supabaseAdmin
-        .from("game_entries")
-        .update({
-          cast_hash: castHash,
-          cast_url: castUrl,
-        })
-        .eq("id", entry.id)
-        .select()
-        .single();
-      
-      if (error) {
-        updateError = error;
-        retries--;
-        if (retries > 0) {
-          // Wait 500ms before retry (exponential backoff could be used here)
-          await new Promise(resolve => setTimeout(resolve, 500));
-          console.warn(`[game/enter] Retrying cast hash update (${retries} retries remaining)...`);
-        }
-      } else {
-        updateSucceeded = true;
-        // Update entry object with fresh data
-        if (data) {
-          entry = data;
-        }
-      }
-    }
+      console.log(`[game/enter] Updating contract cast hash: ${tempCastHash} -> ${castHash}`);
 
-    if (!updateSucceeded && updateError) {
-      console.error("[game/enter] Failed to update entry with real cast hash after retries:", updateError);
-      
-      // Try to fetch the current entry state to verify
-      const { data: currentEntry, error: fetchError } = await supabaseAdmin
-        .from("game_entries")
-        .select("*")
-        .eq("id", entry.id)
-        .single();
-      
-      if (!fetchError && currentEntry) {
-        // If entry was actually updated (race condition or eventual consistency), use it
-        if (currentEntry.cast_hash === castHash) {
-          entry = currentEntry;
-          updateSucceeded = true;
-        } else {
-          // Entry still has temp hash - return error response
-          return NextResponse.json(
-            {
-              error: "Database update failed",
-              message: "Cast was posted successfully, but failed to update database entry. Please contact support.",
-              data: {
-                castHash,
-                castUrl,
-                entryId: entry.id,
-                // Include cast info so user knows it was posted
-                castPosted: true,
-              },
-            },
-            { status: 500 }
-          );
-        }
-      } else {
-        // Couldn't verify entry state - return error
-        return NextResponse.json(
-          {
-            error: "Database update failed",
-            message: "Cast was posted successfully, but failed to update database entry. Please contact support.",
-            data: {
-              castHash,
-              castUrl,
-              entryId: entry.id,
-              castPosted: true,
-            },
-          },
-          { status: 500 }
-        );
-      }
-    }
+      // Retry up to 3 times
+      for (let attempt = 1; attempt <= 3 && !contractUpdateSuccess; attempt++) {
+        try {
+          const hash = await walletClient.writeContract({
+            address: contractAddress as `0x${string}`,
+            abi: UPDATE_CAST_HASH_ABI,
+            functionName: "updateCastHash",
+            args: [tempCastHash, castHash],
+          });
 
-    // Update contract's cast hash mapping from temporary hash to real hash
-    // If tempCastHash was extracted and differs from the real castHash, update the contract
-    // IMPORTANT: This must succeed for the entry to be valid - otherwise the contract won't
-    // recognize the cast hash during finalization
-    if (tempCastHash && tempCastHash !== castHash && tempCastHash.startsWith("temp-")) {
-      const contractAddress = env.GAME_CONTRACT_ADDRESS;
-      const privateKey = env.CRON_WALLET_PRIVATE_KEY;
-
-      if (contractAddress && privateKey) {
-        const chain = env.NEXT_PUBLIC_APP_ENV === "production" ? base : baseSepolia;
-        const publicClient = createPublicClient({
-          chain,
-          transport: http(),
-        });
-
-        const account = privateKeyToAccount(privateKey as `0x${string}`);
-        const walletClient = createWalletClient({
-          account,
-          chain,
-          transport: http(),
-        });
-
-        const UPDATE_CAST_HASH_ABI = [
-          {
-            inputs: [
-              { name: "oldCastHash", type: "string" },
-              { name: "newCastHash", type: "string" },
-            ],
-            name: "updateCastHash",
-            outputs: [],
-            type: "function",
-            stateMutability: "nonpayable",
-          },
-        ] as const;
-
-        console.log(`[game/enter] Updating cast hash on contract: ${tempCastHash} -> ${castHash}`);
-
-        // Retry up to 3 times for contract update
-        let contractUpdateSuccess = false;
-        let lastContractError: Error | null = null;
-        
-        for (let attempt = 1; attempt <= 3 && !contractUpdateSuccess; attempt++) {
-          try {
-            const hash = await walletClient.writeContract({
-              address: contractAddress as `0x${string}`,
-              abi: UPDATE_CAST_HASH_ABI,
-              functionName: "updateCastHash",
-              args: [tempCastHash, castHash],
-            });
-
-            const receipt = await publicClient.waitForTransactionReceipt({ hash });
-            if (receipt.status === "success") {
-              console.log(`[game/enter] Successfully updated cast hash on contract (attempt ${attempt})`);
-              contractUpdateSuccess = true;
-            } else {
-              lastContractError = new Error(`Transaction reverted: ${hash}`);
-              console.error(`[game/enter] Contract update transaction reverted (attempt ${attempt})`);
-            }
-          } catch (error) {
-            lastContractError = error instanceof Error ? error : new Error(String(error));
-            console.error(`[game/enter] Contract update failed (attempt ${attempt}):`, error);
-            if (attempt < 3) {
-              // Wait before retry with exponential backoff
-              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-            }
-          }
-        }
-        
-        if (!contractUpdateSuccess) {
-          // Contract update failed after all retries - this is critical
-          // The entry exists in both contract (with temp hash) and database (with real hash)
-          // Log detailed error for debugging but allow the entry to succeed
-          // The daily-winner cron will handle syncing temp hashes before finalization
-          console.error(
-            `[game/enter] CRITICAL: Failed to sync cast hash to contract after 3 attempts. ` +
-            `Contract has temp hash "${tempCastHash}", database has real hash "${castHash}". ` +
-            `The daily-winner cron will attempt to sync this before finalization. ` +
-            `Error: ${lastContractError?.message || "Unknown error"}`
-          );
-          
-          // Store the temp hash in the database entry for easier reconciliation
-          // This allows the daily-winner to match entries more reliably
-          try {
+          const receipt = await publicClient.waitForTransactionReceipt({ hash });
+          if (receipt.status === "success") {
+            console.log(`[game/enter] Contract updated successfully (attempt ${attempt})`);
+            contractUpdateSuccess = true;
+            
+            // Update database to reflect contract state
             await supabaseAdmin
               .from("game_entries")
-              .update({
-                // Store temp hash in a metadata field or notes field if available
-                // For now, we'll just log it - the daily-winner will use timestamp matching
-              })
+              .update({ contract_cast_hash: castHash })
               .eq("id", entry.id);
-          } catch (dbError) {
-            console.error("[game/enter] Failed to update entry with temp hash reference:", dbError);
+          }
+        } catch (error) {
+          console.error(`[game/enter] Contract update failed (attempt ${attempt}):`, error);
+          if (attempt < 3) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           }
         }
-      } else {
-        // Missing configuration - log error but don't fail the request
-        // The contract already has the entry with temp hash
+      }
+
+      if (!contractUpdateSuccess) {
         console.error(
-          `[game/enter] Cannot update contract cast hash: missing configuration. ` +
-          `Contract has temp hash "${tempCastHash}", database has real hash "${castHash}". ` +
-          `GAME_CONTRACT_ADDRESS: ${contractAddress ? "set" : "missing"}, ` +
-          `CRON_WALLET_PRIVATE_KEY: ${privateKey ? "set" : "missing"}`
+          `[game/enter] SYNC_FAILED: Contract hash sync failed after 3 attempts. ` +
+          `FID=${fid}, roundId=${roundId}, entryId=${entry.id}, ` +
+          `tempHash="${tempCastHash}", realHash="${castHash}". ` +
+          `Daily winner cron will attempt to sync using stored mapping.`
         );
       }
     }
+
+    console.log(`[game/enter] Entry created successfully for FID ${fid}`);
 
     return NextResponse.json(
       {
         success: true,
         data: {
-          entry,
+          entry: { ...entry, cast_hash: castHash, cast_url: castUrl },
           castHash,
           castUrl,
+          contractSynced: contractUpdateSuccess,
         },
       },
       { status: 201 }
@@ -689,4 +464,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

@@ -61,6 +61,7 @@ interface EntryResponse {
     entry: any;
     castHash: string;
     castUrl: string;
+    contractSynced: boolean;
   };
   error?: string;
   message?: string;
@@ -297,7 +298,7 @@ export default function EntryForm() {
     method: "POST",
     isProtected: true,
     body: (variables) => variables,
-    onSuccess: (_data) => {
+    onSuccess: () => {
       setSuccessMessage("Entry submitted successfully! Your cast has been posted.");
       setDunkText("");
       setParentCastUrl("");
@@ -306,7 +307,6 @@ export default function EntryForm() {
       setErrors({});
       setStep("success");
       
-      // Celebration effects!
       setShowConfetti(true);
       play("success");
       
@@ -339,7 +339,7 @@ export default function EntryForm() {
   useEffect(() => {
     if (isEntered && enterHash && step === "pay") {
       // Submit to backend with payment tx hash
-      // Cast hash will be generated after cast is posted by the backend
+      // Backend will post cast and handle hash sync
       submitEntry({
         dunkText,
         parentCastUrl,
@@ -371,9 +371,7 @@ export default function EntryForm() {
       return;
     }
 
-    // Generate a temporary cast hash - will be replaced after cast is posted
-    // In production, you might want to post the cast first, then enter game
-    const tempCastHash = `temp-${Date.now()}`;
+    const tempCastHash = `temp-${Date.now()}-${user?.data?.fid || 0}`;
     
     setErrors({});
     enterGame({
@@ -734,8 +732,8 @@ export default function EntryForm() {
               <Loader2 className="w-5 h-5 animate-spin mr-2" />
               <span>
                 {step === "approve" ? "APPROVING..." : 
-                 step === "pay" ? "PROCESSING..." : 
-                 step === "submit" ? "SUBMITTING..." : "PROCESSING..."}
+                 step === "pay" ? "PROCESSING PAYMENT..." : 
+                 step === "submit" ? "POSTING CAST..." : "PROCESSING..."}
               </span>
             </>
           ) : (
