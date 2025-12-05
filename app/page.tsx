@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Leaderboard from "@/components/game/leaderboard";
 import TodayStats from "@/components/game/today-stats";
+import ClaimReward from "@/components/game/claim-reward";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -54,6 +55,9 @@ export default function DailyLeaderboardPage() {
 
       {/* Main Content */}
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-6 relative">
+        {/* Claimable Rewards */}
+        <ClaimReward />
+
         {/* How It Works */}
         <div className="bg-white border-3 border-black shadow-brutal -rotate-[0.5deg]">
           <div className="p-4 border-b-3 border-black bg-black text-white">

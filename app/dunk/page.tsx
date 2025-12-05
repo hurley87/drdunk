@@ -3,6 +3,7 @@ import EntryForm from "@/components/game/entry-form";
 import RoundStatus from "@/components/game/round-status";
 import Leaderboard from "@/components/game/leaderboard";
 import PastWinners from "@/components/game/past-winners";
+import ClaimReward from "@/components/game/claim-reward";
 import { Trophy } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -32,6 +33,9 @@ export default function DunkPage() {
 
       {/* Main Content */}
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+        {/* Claimable Rewards */}
+        <ClaimReward />
+
         {/* Entry Form Card */}
         <div className="card">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Enter Game</h2>

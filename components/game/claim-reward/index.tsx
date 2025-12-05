@@ -91,6 +91,7 @@ export default function ClaimReward() {
     isProtected: true,
     enabled: !!user?.data,
   });
+  
 
   // Contract write for claiming
   const { writeContract: claimReward, data: claimHash, isPending: isClaiming, error: claimError } = useWriteContract();
@@ -200,6 +201,8 @@ export default function ClaimReward() {
 
   const claimableRounds = claimableData?.data?.rounds || [];
   const totalClaimable = claimableData?.data?.totalClaimable || 0;
+
+  console.log('claimableRounds', claimableRounds);
 
   // No claimable rewards
   if (claimableRounds.length === 0) {
