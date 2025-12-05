@@ -90,11 +90,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get past rounds with winners
+    // Get past rounds with winners (both finalized and claimed)
     const { data: rounds, error } = await supabase
       .from("game_rounds")
       .select("*")
-      .eq("status", "finalized")
+      .in("status", ["finalized", "claimed"])
       .order("id", { ascending: false })
       .limit(10);
 

@@ -5,6 +5,7 @@ import { WinnerCardSkeleton } from "@/components/ui/skeletons";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 interface Round {
   id: number;
@@ -112,12 +113,25 @@ export default function PastWinners() {
           const displayName = user?.display_name || username;
           const pfpUrl = user?.pfp_url;
           
+          const hasWinningCast = Boolean(round.winner_cast_hash);
+          
+          const handleViewCast = () => {
+            if (hasWinningCast) {
+              sdk.actions.viewCast({ hash: round.winner_cast_hash });
+            }
+          };
+          
           return (
-            <div
+            <button
               key={round.id}
+              type="button"
+              onClick={handleViewCast}
+              disabled={!hasWinningCast}
               className={cn(
-                "bg-white border-3 border-black shadow-brutal transition-all duration-75 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-lg transform",
-                rotation
+                "w-full text-left bg-white border-3 border-black shadow-brutal transition-all duration-75 transform",
+                rotation,
+                hasWinningCast && "cursor-pointer hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-lg",
+                !hasWinningCast && "cursor-default"
               )}
             >
               <div className="flex items-center gap-3 p-4">
@@ -140,20 +154,12 @@ export default function PastWinners() {
 
                 {/* Winner Info */}
                 <div className="flex-1 min-w-0">
-                  {round.winner_cast_hash ? (
-                    <a
-                      href={`https://warpcast.com/${username}/${round.winner_cast_hash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-mono text-xs uppercase tracking-wide truncate block hover:text-brutal-red transition-colors"
-                    >
-                      @{username}
-                    </a>
-                  ) : (
-                    <span className="font-mono text-xs uppercase tracking-wide truncate block">
-                      @{username}
-                    </span>
-                  )}
+                  <span className={cn(
+                    "font-mono text-xs uppercase tracking-wide truncate block",
+                    hasWinningCast && "group-hover:text-brutal-red transition-colors"
+                  )}>
+                    @{username}
+                  </span>
                   <p className="font-mono text-xs text-black/60 uppercase tracking-wider">
                     {new Date(round.date).toLocaleDateString("en-US", {
                       month: "short",
@@ -171,7 +177,7 @@ export default function PastWinners() {
                   <p className="font-mono text-[10px] text-black/60 uppercase tracking-wider">USDC WON</p>
                 </div>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
