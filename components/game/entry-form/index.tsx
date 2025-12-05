@@ -487,10 +487,13 @@ export default function EntryForm() {
         <div>
           <label
             htmlFor="parentCastUrl"
-            className="block font-brutal text-xl text-black mb-3 uppercase tracking-wider"
+            className="block font-brutal text-xl text-black mb-1 uppercase tracking-wider"
           >
             REPLY TO CAST
           </label>
+          <p className="text-sm text-black/60 mb-3">
+            Look up cast by URL or hash
+          </p>
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/40 pointer-events-none" />
@@ -509,7 +512,6 @@ export default function EntryForm() {
                     handleCastLookup();
                   }
                 }}
-                placeholder="SEARCH BY CAST URL OR HASH"
                 className={cn(
                   "w-full pl-12 pr-4 py-4 bg-white border-3 font-mono text-sm uppercase tracking-wide placeholder:text-black/30 focus:outline-none transition-all duration-75",
                   errors.parentCastUrl 
