@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import PastWinners from "@/components/game/past-winners";
-import { Users, Award, TrendingUp, Crown } from "lucide-react";
+import { Users, Crown } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "PLAYER LEADERBOARD - DOCTOR DUNK",
@@ -46,43 +46,6 @@ export default function PlayersPage() {
             </h2>
           </div>
           <PastWinners />
-        </div>
-
-        {/* Stats Legend - Offset Grid */}
-        <div className="bg-white border-3 border-black shadow-brutal p-6 transform -rotate-[0.5deg] hover:rotate-0 transition-transform duration-75">
-          <h3 className="font-brutal text-2xl tracking-wider text-black mb-6 uppercase">
-            UNDERSTANDING THE STATS
-          </h3>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="flex items-start gap-3 p-4 border-3 border-black bg-white transform translate-x-1">
-              <Crown className="w-6 h-6 text-red-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-brutal text-lg uppercase tracking-wide text-black">TOTAL WINS</p>
-                <p className="font-mono text-xs uppercase tracking-wide text-black/60">DAILY COMPETITIONS WON</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-4 border-3 border-black bg-white transform -translate-x-2 translate-y-1">
-              <TrendingUp className="w-6 h-6 text-black mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-brutal text-lg uppercase tracking-wide text-black">PARTICIPATION</p>
-                <p className="font-mono text-xs uppercase tracking-wide text-black/60">TOTAL ENTRIES SUBMITTED</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-4 border-3 border-black bg-white transform -translate-x-1">
-              <Award className="w-6 h-6 text-red-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-brutal text-lg uppercase tracking-wide text-black">TOTAL WINNINGS</p>
-                <p className="font-mono text-xs uppercase tracking-wide text-black/60">PRIZE MONEY EARNED</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-4 border-3 border-black bg-white transform translate-x-2 -translate-y-1">
-              <Users className="w-6 h-6 text-black mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-brutal text-lg uppercase tracking-wide text-black">WIN RATE</p>
-                <p className="font-mono text-xs uppercase tracking-wide text-black/60">PERCENTAGE OF WINS</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
