@@ -10,6 +10,7 @@ import Leaderboard from "@/components/game/leaderboard";
 import PastWinners from "@/components/game/past-winners";
 import DunkForm from "@/components/dunk-form";
 import PlayerLeaderboard from "@/components/game/player-leaderboard";
+import ClaimReward from "@/components/game/claim-reward";
 
 type NavKey = "daily" | "create" | "players";
 
@@ -115,6 +116,7 @@ export default function Home() {
     if (activeTab === "daily") {
       return (
         <div className="space-y-6">
+          <ClaimReward />
           <RoundStatus />
           {mentionedFids.length > 0 && <MentionedFidsCard fids={mentionedFids} />}
           <Leaderboard />
