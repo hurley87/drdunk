@@ -18,11 +18,13 @@ export const env = createEnv({
     USDC_CONTRACT_ADDRESS: z.string().min(1).optional(),
     CRON_SECRET: z.string().min(1).optional(),
     CRON_WALLET_PRIVATE_KEY: z.string().min(1).optional(), // Private key for contract calls (owner wallet)
+    BASE_RPC_URL: z.string().url().optional(), // Custom RPC URL for Base chain (server-side)
   },
   client: {
     NEXT_PUBLIC_URL: z.string().min(1),
     NEXT_PUBLIC_GAME_CONTRACT_ADDRESS: z.string().min(1).optional(),
     NEXT_PUBLIC_USDC_CONTRACT_ADDRESS: z.string().min(1).optional(),
+    NEXT_PUBLIC_BASE_RPC_URL: z.string().url().optional(),
     NEXT_PUBLIC_APP_ENV: z
       .enum(["development", "production"])
       .optional()
@@ -42,5 +44,6 @@ export const env = createEnv({
     NEXT_PUBLIC_BOT_FID: process.env.NEXT_PUBLIC_BOT_FID,
     NEXT_PUBLIC_GAME_CONTRACT_ADDRESS: process.env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS,
     NEXT_PUBLIC_USDC_CONTRACT_ADDRESS: process.env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS,
+    NEXT_PUBLIC_BASE_RPC_URL: process.env.NEXT_PUBLIC_BASE_RPC_URL,
   },
 });

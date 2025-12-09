@@ -2,11 +2,15 @@ import { farcasterFrame as miniAppConnector } from "@farcaster/miniapp-wagmi-con
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createConfig, http, WagmiProvider } from "wagmi";
 import { base, baseSepolia } from "wagmi/chains";
+import { env } from "@/lib/env";
+
+// Use custom RPC URL if provided, otherwise fall back to default public RPC
+const baseRpcUrl = env.NEXT_PUBLIC_BASE_RPC_URL;
 
 export const config = createConfig({
   chains: [base, baseSepolia],
   transports: {
-    [base.id]: http(),
+    [base.id]: http(baseRpcUrl),
     [baseSepolia.id]: http(),
   },
   connectors: [miniAppConnector()],

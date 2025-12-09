@@ -105,9 +105,10 @@ export async function POST(request: NextRequest) {
     
     try {
       const chain = env.NEXT_PUBLIC_APP_ENV === "production" ? base : baseSepolia;
+      const rpcUrl = env.BASE_RPC_URL;
       const client = createPublicClient({
         chain,
-        transport: http(),
+        transport: http(rpcUrl),
       });
 
       // Wait for transaction receipt to verify it succeeded
@@ -361,16 +362,17 @@ export async function POST(request: NextRequest) {
 
     if (privateKey && tempCastHash !== castHash) {
       const chain = env.NEXT_PUBLIC_APP_ENV === "production" ? base : baseSepolia;
+      const rpcUrl = env.BASE_RPC_URL;
       const publicClient = createPublicClient({
         chain,
-        transport: http(),
+        transport: http(rpcUrl),
       });
 
       const account = privateKeyToAccount(privateKey as `0x${string}`);
       const walletClient = createWalletClient({
         account,
         chain,
-        transport: http(),
+        transport: http(rpcUrl),
       });
 
       const UPDATE_CAST_HASH_ABI = [

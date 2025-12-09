@@ -163,9 +163,10 @@ export async function calculateDailyWinner() {
     if (privateKey) {
       try {
         const chain = env.NEXT_PUBLIC_APP_ENV === "production" ? base : baseSepolia;
+        const rpcUrl = env.BASE_RPC_URL;
         const publicClient = createPublicClient({
           chain,
-          transport: http(),
+          transport: http(rpcUrl),
         });
 
         // Create wallet client with private key
@@ -173,7 +174,7 @@ export async function calculateDailyWinner() {
         const walletClient = createWalletClient({
           account,
           chain,
-          transport: http(),
+          transport: http(rpcUrl),
         });
 
         console.log(`[daily-winner] Finalizing round ${previousRoundId} on contract ${GAME_CONTRACT_ADDRESS}...`);

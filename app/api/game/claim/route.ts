@@ -98,9 +98,10 @@ export async function POST(request: NextRequest) {
     if (txHash) {
       try {
         const chain = env.NEXT_PUBLIC_APP_ENV === "production" ? base : baseSepolia;
+        const rpcUrl = env.BASE_RPC_URL;
         const client = createPublicClient({
           chain,
-          transport: http(),
+          transport: http(rpcUrl),
         });
 
         // Wait for transaction receipt to confirm it succeeded
