@@ -51,6 +51,7 @@ const dunkSchema = z.object({
 interface EntryFormData {
   dunkText: string;
   parentCastHash: string;
+  parentAuthorFid: number;
   paymentTxHash: string;
 }
 
@@ -329,6 +330,7 @@ export default function EntryForm() {
       submitEntry({
         dunkText,
         parentCastHash: selectedCast.hash,
+        parentAuthorFid: selectedCast.author.fid,
         paymentTxHash: enterHash,
       });
       setStep("submit");

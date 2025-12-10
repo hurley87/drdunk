@@ -24,6 +24,7 @@ const castHashSchema = z.string().min(1, "Cast hash is required").refine(
 const enterGameSchema = z.object({
   dunkText: z.string().min(1, "Dunk text cannot be empty"),
   parentCastHash: castHashSchema,
+  parentAuthorFid: z.number().int().positive("Parent author FID must be a positive integer"),
   paymentTxHash: z.string().min(1, "Payment transaction hash required"),
 });
 
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { dunkText, parentCastHash, paymentTxHash } = validationResult.data;
+    const { dunkText, parentCastHash, parentAuthorFid, paymentTxHash } = validationResult.data;
 
     // Check if Supabase admin is configured
     if (!isSupabaseAdminConfigured()) {
@@ -312,7 +313,7 @@ export async function POST(request: NextRequest) {
     let castUrl: string;
 
     try {
-      const castResponse = await postDunkCast(dunkText, parentCastHash);
+      const castResponse = await postDunkCast(dunkText, parentCastHash, parentAuthorFid);
       castHash = castResponse.cast?.hash || castResponse.result?.cast?.hash || "";
       const authorFid = castResponse.cast?.author?.fid || castResponse.result?.cast?.author?.fid;
       castUrl = castHash && authorFid 

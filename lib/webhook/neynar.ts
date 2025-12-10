@@ -39,14 +39,16 @@ export function buildEmbedUrl(baseUrl: string, fids: number[]): string {
 }
 
 /**
- * Post a cast as a reply to another cast
+ * Post a cast as a quote cast (embedding another cast)
  * @param text The text content of the cast
  * @param parentCastHash Parent cast hash (must be 0x-prefixed hex string, pre-validated)
+ * @param parentAuthorFid The FID of the author of the cast being quoted
  * @returns The cast response with hash and other metadata
  */
 export async function postDunkCast(
   text: string,
-  parentCastHash: string
+  parentCastHash: string,
+  parentAuthorFid: number
 ): Promise<CastReplyResponse> {
   const trimmedHash = parentCastHash.trim();
   
@@ -55,12 +57,12 @@ export async function postDunkCast(
     throw new Error(`Invalid cast hash format: ${trimmedHash}. Expected a cast hash (0x...)`);
   }
 
-  console.log(`[postDunkCast] Posting reply to parent hash: ${trimmedHash}`);
+  console.log(`[postDunkCast] Posting quote cast for parent hash: ${trimmedHash}`);
 
   const body = {
     signer_uuid: env.SIGNER_UUID,
     text,
-    parent: trimmedHash,
+    embeds: [{ cast_id: { fid: parentAuthorFid, hash: trimmedHash } }],
   };
 
   const response = await fetch("https://api.neynar.com/v2/farcaster/cast", {
