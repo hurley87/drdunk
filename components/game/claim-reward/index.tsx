@@ -8,7 +8,6 @@ import { useUser } from "@/contexts/user-context";
 import { useMiniApp } from "@/contexts/miniapp-context";
 import { GAME_CONTRACT_ADDRESS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import { TransactionStatus } from "@/components/ui/transaction-status";
 import { Confetti } from "@/components/ui/confetti";
 import { Loader2, Trophy, Coins, ExternalLink, Gift } from "lucide-react";
 import { useSound } from "@/hooks/use-sound";
@@ -275,16 +274,6 @@ export default function ClaimReward() {
         </div>
       )}
 
-      {/* Transaction Status */}
-      {isProcessing && claimingRoundId && (
-        <div className="mb-4">
-          <TransactionStatus 
-            step={isClaimed ? "confirmed" : isClaiming ? "paying" : "confirming"}
-            txHash={claimHash}
-          />
-        </div>
-      )}
-
       {/* Error Message */}
       {errorMessage && (
         <div className="border-3 border-black bg-red-500 p-4 shadow-brutal mb-4 animate-shake">
@@ -321,12 +310,6 @@ export default function ClaimReward() {
               )}
             >
               <div className="flex items-center gap-3 p-4">
-                {/* Round Badge */}
-                <div className="flex-shrink-0 w-14 h-14 bg-red-500 text-white flex flex-col items-center justify-center transform -rotate-3 border-3 border-black">
-                  <span className="font-mono text-[10px] uppercase tracking-wider">RND</span>
-                  <span className="font-bebas text-xl leading-none">#{round.id}</span>
-                </div>
-
                 {/* Winner Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -344,18 +327,7 @@ export default function ClaimReward() {
                   </p>
                 </div>
 
-                {/* Prize Amount */}
-                <div className="text-right flex-shrink-0">
-                  <div className="flex items-center gap-1 justify-end">
-                    <Coins className="w-4 h-4 text-red-500" />
-                    <p className="font-bebas text-2xl text-red-500">
-                      {round.pot_amount.toFixed(2)}
-                    </p>
-                  </div>
-                  <p className="font-mono text-[10px] text-black/60 uppercase tracking-wider">USDC</p>
-                </div>
-
-                {/* Claim Button */}
+                {/* Claim Button with Amount */}
                 <Button
                   onClick={() => handleClaim(round.id)}
                   disabled={!isConnected || isProcessing}
@@ -372,7 +344,8 @@ export default function ClaimReward() {
                   ) : (
                     <>
                       <Gift className="w-4 h-4 mr-2" />
-                      CLAIM
+                      <Coins className="w-4 h-4 mr-1" />
+                      {round.pot_amount.toFixed(2)} USDC
                     </>
                   )}
                 </Button>
